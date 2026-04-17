@@ -125,11 +125,11 @@ body {
 /* ── Hero ── */
 .zpk-hero {
     background: var(--zpk-cream);
-    padding: 80px 40px 72px;
-    text-align: center;
+    padding: 80px 40px 72px 150px;
+    text-align: left;
 }
 .hero-eyebrow {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--zpk-muted);
     letter-spacing: 0.04em;
@@ -145,19 +145,19 @@ body {
 }
 .hero-lineage {
     max-width: 780px;
-    margin: 0 auto 20px;
     font-size: 15px;
     color: #4b5563;
     line-height: 1.7;
     font-style: italic;
+    margin-bottom: 20px;
 }
 .hero-timeline {
     max-width: 860px;
-    margin: 0 auto 36px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 15px;
     color: #374151;
     line-height: 2;
+    margin-bottom: 36px;
 }
 .hero-timeline .era { display: inline; }
 .hero-timeline .era-final { color: var(--zpk-navy); font-weight: 700; }
@@ -166,9 +166,8 @@ body {
     font-size: 17px;
     color: var(--zpk-navy);
     font-weight: 500;
-    margin-bottom: 40px;
+    margin-bottom: 0;
 }
-.hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 .btn-zpk-primary {
     background: var(--zpk-navy);
     color: #fff;
@@ -407,10 +406,6 @@ body {
         <span class="era era-final">Zero Persistent Knowledge (ZPK&trade;) (2026-&infin;)</span>
     </div>
     <p class="hero-closing">ZPK is an open protocol SDK for payment privacy. The engine remains ours.</p>
-    <div class="hero-actions">
-        <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
-        <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
-    </div>
 </section>
 
 <!-- Video -->
