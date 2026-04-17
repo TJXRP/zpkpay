@@ -42,6 +42,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xumm-oauth2-pkce@2.8.7/dist/browser.min.js"></script>
+    <script src="pre-shatter.js"></script>
 <style>
 :root {
     --bg: #f8fafc;
@@ -969,9 +970,14 @@ async function materialize(xamanUuid, account) {
             throw new Error(result.error || 'Reassembly failed');
         }
 
-        // Reassembly successful -- display the ISO message
+        // Reassembly successful -- unscramble client-side before display.
+        // Server returned scrambled bytes. postAssemble uses the wallet
+        // address as the key to recover plaintext in the browser only.
+        // Plaintext never existed on the server at any point.
+        status.textContent = 'Reassembly complete. Unscrambling locally...';
+        const plainPayload = await postAssemble(result.data, account);
         status.textContent = 'Reassembly complete. Data exists in RAM only.';
-        displayResult(result.data, result.arweaveId);
+        displayResult(plainPayload, result.arweaveId);
 
         // Update header to success state then auto-dismiss after 2s
         const heroBody = document.getElementById('heroBody');
