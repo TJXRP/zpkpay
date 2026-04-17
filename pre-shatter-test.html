@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pre-shatter.js test</title>
+<style>
+body { font-family: monospace; font-size: 15px; padding: 40px; background: #0a0c1c; color: #e2e8f0; max-width: 900px; }
+h2 { color: #e8960c; }
+button { background: #e8960c; color: #fff; border: none; padding: 12px 24px; font-size: 15px; cursor: pointer; border-radius: 6px; margin: 8px 4px; }
+button:hover { opacity: 0.85; }
+textarea { width: 100%; background: #1a1f36; color: #e2e8f0; border: 1px solid #374151; border-radius: 6px; padding: 12px; font-size: 14px; font-family: monospace; margin: 8px 0; }
+.result { background: #1a1f36; border: 1px solid #374151; border-radius: 6px; padding: 16px; margin: 12px 0; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
+.pass { color: #86efac; }
+.fail { color: #fca5a5; }
+label { color: #9ca3af; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h2>pre-shatter.js isolation test</h2>
+
+<label>Wallet address (key)</label>
+<textarea id="wallet" rows="1">rTestWalletAddress123456789</textarea>
+
+<label>Plaintext payload</label>
+<textarea id="plaintext" rows="6"><?xml version="1.0"?><Document><CdtTrfTxInf><IntrBkSttlmAmt Ccy="USD">1000.00</IntrBkSttlmAmt><Cdtr><Nm>Test Receiver</Nm></Cdtr></CdtTrfTxInf></Document></textarea>
+
+<button onclick="runShatter()">Run preShatter</button>
+<button onclick="runAssemble()">Run postAssemble</button>
+<button onclick="runSelfTest()">Run self-test</button>
+<button onclick="runWrongWallet()">Test wrong wallet</button>
+
+<div id="output"></div>
+
+<script src="pre-shatter.js"></script>
+<script>
+function log(label, value, cls) {
+    const out = document.getElementById('output');
+    out.innerHTML += `<div class="result ${cls||''}"><strong>${label}</strong>\n${value}</div>`;
+}
+function clear() { document.getElementById('output').innerHTML = ''; }
+
+async function runShatter() {
+    clear();
+    const wallet    = document.getElementById('wallet').value.trim();
+    const plaintext = document.getElementById('plaintext').value;
+    try {
+        const scrambled = await preShatter(plaintext, wallet);
+        log('Scrambled (base64):', scrambled);
+        window._lastScrambled = scrambled;
+    } catch(e) { log('ERROR:', e.message, 'fail'); }
+}
+
+async function runAssemble() {
+    const wallet = document.getElementById('wallet').value.trim();
+    if (!window._lastScrambled) { log('Run preShatter first', '', 'fail'); return; }
+    try {
+        const recovered = await postAssemble(window._lastScrambled, wallet);
+        log('Recovered plaintext:', recovered, 'pass');
+    } catch(e) { log('ERROR:', e.message, 'fail'); }
+}
+
+async function runSelfTest() {
+    clear();
+    try {
+        await preShatterSelfTest();
+        log('Self-test:', 'PASSED -- round-trip verified, wrong wallet verified', 'pass');
+    } catch(e) { log('Self-test FAILED:', e.message, 'fail'); }
+}
+
+async function runWrongWallet() {
+    if (!window._lastScrambled) { log('Run preShatter first', '', 'fail'); return; }
+    try {
+        const noise = await postAssemble(window._lastScrambled, 'rWrongWallet000000000000000');
+        log('Wrong wallet output (should be noise):', noise, '');
+    } catch(e) { log('ERROR:', e.message, 'fail'); }
+}
+</script>
+</body>
+</html>
