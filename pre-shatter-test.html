@@ -37,7 +37,18 @@ label { color: #9ca3af; font-size: 13px; }
 <script>
 function log(label, value, cls) {
     const out = document.getElementById('output');
-    out.innerHTML += `<div class="result ${cls||''}"><strong>${label}</strong>\n${value}</div>`;
+    const div = document.createElement('div');
+    div.className = 'result ' + (cls || '');
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const pre = document.createElement('pre');
+    pre.style.margin = '8px 0 0';
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.wordBreak = 'break-all';
+    pre.textContent = value;
+    div.appendChild(strong);
+    div.appendChild(pre);
+    out.appendChild(div);
 }
 function clear() { document.getElementById('output').innerHTML = ''; }
 
