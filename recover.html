@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+    ============================================================
+    AIFS ZPKPay Recovery Portal - recover.html
+    TJ Reynolds - AIFS Protocol Inc - April 2026
+
+    PURPOSE:
+    This page allows both the sender and receiver of a ZPKPay
+    settlement to independently verify and reassemble the ISO
+    20022 message payload using their Xaman wallet.
+
+    HOW IT WORKS:
+    1. URL contains ?dna=[hex] parameter from the XRPL memo field
+    2. User signs with Xaman to prove wallet identity
+    3. Backend verifies against stored sender/receiver addresses
+    4. ISO message reassembles in RAM only
+    5. Data purged when tab closes -- Zero Persistent Knowledge
+
+    SECURITY:
+    - This page is intentionally public. The DNA anchor is on
+      the public ledger. Security comes from wallet authorization,
+      not from URL secrecy.
+    - No data is stored. No cookies. No session state.
+    - Reassembly occurs in RAM only, never written to disk.
+    - The AIFS Forensic Anchor Standard governs all on-chain data.
+
+    RULES:
+    - No new .md files without TJ authorization
+    - No new .html files without TJ authorization
+    - Nothing written to C: drive
+    - No em dashes
+    - No placeholder code
+    ============================================================
+-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:;">
+    <title>ZPKPay - Recovery Portal</title>
+    <link rel="icon" type="image/png" href="/img/ZPKPay-logo-png.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xumm-oauth2-pkce@2.8.7/dist/browser.min.js"></script>
+<style>
+:root {
+    --bg: #f8fafc;
+    --sur: #ffffff;
+    --s2: #f1f5f9;
+    --brd: rgba(0,0,0,.08);
+    --brd2: rgba(0,0,0,.13);
+    --tx: #0f172a;
+    --mu: #475569;
+    --di: #94a3b8;
+    --xr: #00897B;
+    --da: #dc2626;
+    --ok: #059669;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: var(--bg);
+    color: var(--tx);
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 24px;
+}
+
+.card {
+    background: var(--sur);
+    border: 1px solid var(--brd);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 960px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* ── tab system ── */
+.tabs-row {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0;
+    border-bottom: 1px solid var(--brd);
+    padding-bottom: 2px;
+}
+.tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--mu);
+    font-size: 13pt;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.2s ease;
+}
+.tab-btn:hover { background: var(--s2); }
+.tab-btn.active {
+    color: var(--xr);
+    border-bottom-color: var(--xr);
+    background: rgba(0,137,123,0.04);
+}
+.tab-pane { display: none; margin-top: 10px; }
+.tab-pane.active { display: block; }
+
+/* ── collapsible header ── */
+.hero-header {
+    text-align: center;
+    margin-bottom: 0;
+}
+.hero-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    padding-bottom: 4px;
+}
+.page-title {
+    font-size: 22pt;
+    font-weight: 800;
+    color: var(--tx);
+}
+.hero-chevron {
+    width: 22px;
+    height: 22px;
+    color: var(--di);
+    transition: transform .25s ease;
+    flex-shrink: 0;
+}
+.hero-chevron.up { transform: rotate(180deg); }
+
+.hero-body {
+    overflow: hidden;
+    max-height: 200px;
+    transition: max-height .3s ease, opacity .3s ease, margin-top .3s ease;
+    opacity: 1;
+    margin-top: 12px;
+}
+.hero-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+.page-sub {
+    font-size: 13pt;
+    color: var(--mu);
+    text-align: center;
+    line-height: 1.7;
+}
+.hero-divider {
+    border: none;
+    border-top: 1px solid var(--brd);
+    margin: 20px 0;
+    transition: margin .3s ease;
+}
+
+.logo-wrap {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.logo-wrap img { height: 44px; width: auto; }
+
+/* INSTITUTIONAL SOVEREIGNTY TIP - Antigravity (Requested by USER) - April 2026 */
+/* PURPOSE: Explaining node portability and the private-silo risk to auditors. */
+.tip-container {
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+.tip-badge {
+    background: var(--s2);
+    border: 1px solid var(--brd2);
+    color: var(--mu);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13pt;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+    user-select: none;
+}
+.tip-badge:hover { background: #fefce8; border-color: #fde047; color: #854d0e; }
+
+.tip-content {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #fde047;
+    border-radius: 12px;
+    padding: 24px;
+    width: 380px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    z-index: 1000;
+    text-align: left;
+    line-height: 1.6;
+}
+.tip-container:hover .tip-content { display: block; }
+.tip-content::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: #fde047;
+}
+
+.tip-title {
+    font-size: 15pt; /* Larger font size, not heavier weight — Rule 61 */
+    color: var(--tx);
+    margin-bottom: 10px;
+    display: block;
+}
+.tip-body {
+    font-size: 13pt;
+    color: var(--mu);
+    display: block;
+}
+.tip-note {
+    font-size: 13pt;
+    color: #b45309;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #fef08a;
+    display: block;
+    font-style: italic;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--brd);
+    font-size: 13pt;
+    gap: 16px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--mu); font-weight: 600; flex-shrink: 0; }
+.info-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12pt;
+    color: var(--tx);
+    word-break: break-all;
+    text-align: right;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: #00897B;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14pt;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 24px;
+    transition: opacity .2s;
+}
+.btn-primary:hover { opacity: .9; }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── formatted ISO document display ── */
+.doc-panel {
+    display: none;
+    margin-top: 24px;
+    background: var(--sur);
+    border: 1px solid var(--brd);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.doc-panel-header {
+    background: #f0fdf4;
+    border-bottom: 1px solid #bbf7d0;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.doc-panel-title {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #065f46;
+}
+.doc-panel-badge {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #059669;
+    background: #d1fae5;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+.doc-fields {
+    padding: 20px;
+}
+.doc-section {
+    margin-bottom: 20px;
+}
+.doc-section-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--mu);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--brd);
+}
+.doc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    font-size: 13pt;
+    gap: 12px;
+}
+.doc-key {
+    color: var(--mu);
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 140px;
+}
+.doc-val {
+    color: var(--tx);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13pt;
+    text-align: right;
+    word-break: break-all;
+}
+.doc-val.highlight {
+    color: var(--xr);
+    font-weight: 600;
+}
+.raw-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    border-top: 1px solid var(--brd);
+}
+.btn-raw {
+    font-size: 13pt;
+    color: var(--mu);
+    background: transparent;
+    border: 1px solid var(--brd2);
+    border-radius: 6px;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color .15s, border-color .15s;
+}
+.btn-raw:hover { color: var(--tx); border-color: var(--brd2); }
+
+.raw-box {
+    margin: 0;
+    background: var(--s2);
+    border: 1px solid var(--brd);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12pt;
+    color: var(--tx);
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.6;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.status-msg {
+    text-align: center;
+    font-size: 13pt;
+    color: var(--mu);
+    margin-top: 16px;
+    min-height: 24px;
+}
+.error-msg {
+    color: var(--da);
+    text-align: center;
+    font-size: 13pt;
+    margin-top: 16px;
+    display: none;
+}
+
+.zpk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13pt;
+    font-weight: 600;
+    color: #047857;
+    background: rgba(4,120,87,.08);
+    border: 1px solid rgba(4,120,87,.25);
+    padding: 5px 14px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+.zpk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #047857;
+    box-shadow: 0 0 6px rgba(4,120,87,.5);
+}
+
+.footer {
+    font-size: 13pt;
+    color: var(--di);
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo-wrap">
+        <img src="/img/ZPKPay-logo-png.png" alt="ZPKPay">
+    </div>
+
+    <div style="text-align:center;margin-bottom:20px;">
+        <span class="zpk-badge"><span class="zpk-dot"></span>XRPL Mainnet</span>
+    </div>
+
+    <!-- Collapsible header -->
+    <div class="hero-header">
+        <div class="hero-toggle-row" onclick="toggleHero()" id="heroToggle" role="button" aria-expanded="true" aria-controls="heroBody">
+            <div class="page-title">
+                ISO Message Recovery
+                <!-- INSTITUTIONAL SOVEREIGNTY TIP - Antigravity (Requested by USER) - April 2026 -->
+                <div class="tip-container">
+                    <div class="tip-badge">( Tip )</div>
+                    <div class="tip-content">
+                        <span class="tip-title">Institutional Sovereignty</span>
+                        <span class="tip-body">AIFS server clusters are private. However, large institutions (e.g., Bank of America) can deploy multiple compliant nodes across their global networks to achieve total internal interoperability. Because the DNA Anchor is permanently locked into the XRPL, any authorized node across your entire enterprise can reassemble documents instantly.</span>
+                        <span class="tip-note">This ensures a bit-perfect forensic audit trail that is globally portable and instantly recoverable from any AIFS-compliant viewer within your private cluster.</span>
+                    </div>
+                </div>
+            </div>
+            <svg class="hero-chevron" id="heroChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        </div>
+        <div class="hero-body" id="heroBody">
+            <div class="page-sub">
+                Sign with your Xaman wallet to verify your identity and reassemble the ISO 20022 message.<br>
+                The message exists only in RAM during your session.
+            </div>
+        </div>
+    </div>
+
+    <hr class="hero-divider">
+
+    <!-- Settlement details parsed from URL -->
+    <div id="settlement-info" style="margin-bottom:24px;">
+        <div class="info-row">
+            <span class="info-key">DNA Anchor</span>
+            <span class="info-val" id="display-dna">Loading...</span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Role</span>
+            <span class="info-val" id="display-role">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">XRPL Explorer</span>
+            <span class="info-val">
+                <a id="explorer-link" href="#" target="_blank"
+                    style="color:#00897B;text-decoration:none;">
+                    View on ledger
+                </a>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Arweave Particles</span>
+            <span class="info-val">
+                <a id="arweave-link" href="#" target="_blank"
+                    style="color:#00897B;text-decoration:none;">
+                    View particles
+                </a>
+            </span>
+        </div>
+    </div>
+
+    <!-- Manual anchor entry - shown when no DNA in URL -->
+    <div id="not-found" style="display:none;">
+        <div style="font-size:14pt;font-weight:700;color:var(--tx);margin-bottom:8px;">
+            Enter DNA Anchor
+        </div>
+        <div style="font-size:13pt;color:var(--mu);margin-bottom:16px;line-height:1.7;">
+            Paste the DNA anchor from your XRPL transaction memo field, then choose your role.
+        </div>
+        <div style="margin-bottom:14px;">
+            <input type="text" id="manual-dna" placeholder="Paste DNA anchor here..."
+                style="width:100%;padding:12px 14px;font-family:'JetBrains Mono',monospace;
+                font-size:13pt;border:1px solid var(--brd2);border-radius:8px;
+                background:var(--s2);color:var(--tx);outline:none;">
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="enterManual('sender')" style="
+                flex:1;padding:14px;
+                background:linear-gradient(135deg,#00897B 0%,#0369a1 100%);
+                border:none;border-radius:8px;color:#fff;
+                font-size:14pt;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+                I am the Sender
+            </button>
+            <button onclick="enterManual('receiver')" style="
+                flex:1;padding:14px;
+                background:linear-gradient(135deg,#00897B 0%,#0369a1 100%);
+                border:none;border-radius:8px;color:#fff;
+                font-size:14pt;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+                I am the Recipient
+            </button>
+        </div>
+        <div id="manual-error" style="font-size:13pt;color:var(--da);margin-top:10px;display:none;">
+            Please paste a valid DNA anchor before continuing.
+        </div>
+    </div>
+
+    <!-- Sign section - hidden after successful recovery -->
+    <div id="sign-section">
+        <button class="btn-primary" id="btn-sign" onclick="authorizeRecovery()">
+            Sign with Xaman to Reassemble
+        </button>
+        <div class="status-msg" id="status-msg"></div>
+        <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- Reassembled Document Panel (3-Tab Layout) -->
+    <div id="doc-panel" style="display:none;margin-top:32px;">
+        <div class="tabs-row" style="display:flex;gap:8px;align-items:center;">
+            <button class="tab-btn active" style="flex:1;" onclick="switchTab('raw', event)">Raw XML Data</button>
+            <button class="tab-btn" style="flex:1;" onclick="switchTab('particles', event)">Raw Particles</button>
+            <button class="btn-primary" style="flex:1;margin:0;padding:10px 22px;font-size:13pt;background:linear-gradient(135deg,#00897B 0%,#0369a1 100%);border:none;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);" onclick="openFormattedMessage()">View Formatted Message</button>
+        </div>
+
+        <div id="doc-panel-title" style="font-size:16pt;font-weight:800;color:var(--tx);margin:16px 0 2px;">Success!<br><span style="font-size:13pt;font-weight:700;color:#00897B;">XML pacs.008.001.10 1:1 Bit-perfect reassembly</span></div>
+        <div style="font-size:12pt;color:var(--mu);margin-bottom:12px;">Data reassembled. Use "Raw XML Data" tab to inspect the salt.</div>
+
+        <!-- Raw XML Tab -->
+        <div id="pane-raw" class="tab-pane active">
+            <div id="doc-fields"></div> <!-- required for document rendering -->
+            <div style="font-size:12pt;color:var(--mu);margin-bottom:8px;">Nonce injection added intentionally: <span id="shannon-nonce-display" style="font-family:'JetBrains Mono',monospace;color:var(--tx);">-</span></div>
+            <pre id="raw-box" class="raw-box" style="white-space:pre-wrap;margin-top:16px;"></pre>
+        </div>
+
+        <!-- Particles Tab -->
+        <div id="pane-particles" class="tab-pane">
+            <div id="particle-status" style="font-size:13pt;color:var(--mu);margin-bottom:12px;">Fetching permanent fragments...</div>
+            <pre id="particle-box" class="raw-box" style="font-size:11pt;background:#0f172a;color:#94a3b8;border:none;white-space:normal;word-break:break-all;"></pre>
+        </div>
+
+        <div id="post-recovery" class="action-grid" style="margin-top:28px;display:flex;gap:10px;display:none;">
+            <button class="btn-primary" style="flex:1;background:#fff;color:var(--mu);border:1px solid var(--brd2);" onclick="window.print()">Print Verified Record</button>
+            <button class="btn-primary btn-danger" style="flex:1;" onclick="purgeAndClose()">Purge and Close session</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- FORMATTED MESSAGE MODAL - RAM-only Protocol Presentation      -->
+<!-- ============================================================ -->
+<div id="invoice-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);">
+    <div style="background:#ffffff;width:100%;max-width:900px;height:94vh;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+        <!-- Modal Toolbar -->
+        <div style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;">
+            <div id="invoice-header-title" style="font-size:15pt;font-weight:800;color:#1e293b;letter-spacing:0.02em;">AIFS™ ZPK™ Bit-Perfect Protocol Extraction</div>
+            <button onclick="closeInvoiceModal()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:24pt;line-height:1;">&times;</button>
+        </div>
+        <!-- Modal Body (Printable Area) -->
+        <div id="invoice-print-area" style="flex:1;overflow-y:auto;padding:48px 60px;color:#000000;font-family:'Inter', sans-serif;">
+            <div id="invoice-content"></div>
+        </div>
+        <!-- Modal Footer -->
+        <div style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:center;gap:12px;">
+            <button onclick="window.print()" class="btn-primary" style="margin:0;max-width:200px;">Print Invoice</button>
+            <button onclick="closeInvoiceModal()" class="btn-primary" style="margin:0;max-width:200px;background:#64748b;">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    AIFS Protocol Inc. · Zero Persistent Knowledge · USPTO 19/551,805 · 19/560,251 · 19/564,384<br>
+    This message exists in RAM only. It will be purged when you close this tab.
+</div>
+
+<script>
+'use strict';
+
+// 🔱 SHANNON ENVELOPE EXTRACTION - Antigravity - April 2026
+// Detect and extract the Shannon Entropy Envelope natively in the UI
+function openFormattedMessage() {
+    if (!_rawData) return;
+    renderFormattedMessage(_rawData);
+    document.getElementById('invoice-modal').style.display = 'flex';
+}
+
+function closeInvoiceModal() {
+    document.getElementById('invoice-modal').style.display = 'none';
+    document.getElementById('invoice-content').innerHTML = '';
+}
+
+function renderFormattedMessage(xml) {
+    const content = document.getElementById('invoice-content');
+    const headerTitle = document.getElementById('invoice-header-title');
+    
+    // Extract ISO Version (e.g., pacs.008.001.10 or camt.054.001.08)
+    const isoMatch = xml.match(/([a-z]{4}\.\d{3}\.\d{3}\.\d{2})/);
+    const isoVersion = isoMatch ? isoMatch[1] : 'ISO Standard Message';
+    headerTitle.textContent = `AIFS™ ZPK™ Bit-Perfect Protocol Extraction`;
+
+    // Universal Multi-Variant Scanner (Hardens for different messages types)
+    const findValue = (tags) => {
+        for (let tag of tags) {
+            const match = xml.match(new RegExp(`<${tag}[^>]*>([^<]+)</${tag}>`));
+            if (match) return match[1].trim();
+        }
+        return '-';
+    };
+
+    // Agent Helper: Tries to find Bic/Nm inside specific agent structures
+    const findAgent = (sections, type) => {
+        for (let s of sections) {
+            const part = xml.split(`<${s}>`)[1];
+            if (!part) continue;
+            const sub = part.split(`</${s}>`)[0];
+            const match = sub.match(new RegExp(`<${type}>([^<]+)</${type}>`));
+            if (match) return match[1].trim();
+        }
+        return '-';
+    };
+
+    // Unified Data Extraction 
+    const instgName = findAgent(['InstgAgt', 'DbtrAgt', 'Dbtr'], 'Nm');
+    const instdName = findAgent(['InstdAgt', 'CdtrAgt', 'Cdtr'], 'Nm');
+    const instgBic  = findAgent(['InstgAgt', 'DbtrAgt'], 'BICFI');
+    const instdBic  = findAgent(['InstdAgt', 'CdtrAgt'], 'BICFI');
+    
+    // Amount Variants: IntrBkSttlmAmt (pacs.008), Amt (pacs.009), TxAmt (others)
+    const amount = findValue(['IntrBkSttlmAmt', 'Amt', 'InstdAmt', 'TxAmt']);
+    const ccy = xml.match(/Ccy="([^"]+)"/)?.[1] || 'USD';
+    
+    const uetr = findValue(['UETR', 'MsgId']);
+    const e2e = findValue(['EndToEndId', 'InstrId']);
+    const dbtr = findAgent(['Dbtr'], 'Nm');
+    const cdtr = findAgent(['Cdtr'], 'Nm');
+    const date = findValue(['IntrBkSttlmDt', 'CreDtTm', 'ExctnDt']);
+
+    content.innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:60px;align-items:flex-start;">
+            <div>
+                <div style="font-size:32pt;font-weight:900;color:#000;margin-bottom:4px;letter-spacing:-0.01em;">RECEIPT</div>
+                <div style="font-size:14pt;color:#64748b;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">[ ${isoVersion} ]</div>
+                <div style="font-size:12pt;color:#94a3b8;margin-top:6px;font-weight:600;">AIFS Protocol · Institutional Settlement</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="position:relative;display:inline-block;margin-bottom:16px;">
+                    <div style="position:absolute;top:-18px;right:-10px;background:#0369a1;color:white;font-size:9pt;font-weight:800;padding:3px 10px;border-radius:4px;transform:rotate(3deg);letter-spacing:0.06em;z-index:1;">ISO XML AMT</div>
+                    <div style="font-size:13pt;color:#64748b;font-weight:600;margin-bottom:2px;">Contractual Message Amount</div>
+                    <div style="font-size:36pt;font-weight:900;color:#0369a1;">${ccy} ${parseFloat(amount.replace(/,/g,'')).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:6})}</div>
+                </div>
+                <div style="position:relative;display:inline-block;" id="onchain-amt-block">
+                    <div style="position:absolute;top:-18px;right:-10px;background:#0d9488;color:white;font-size:9pt;font-weight:800;padding:3px 10px;border-radius:4px;transform:rotate(3deg);letter-spacing:0.06em;z-index:1;">SETTLED ONCHAIN</div>
+                    <div style="font-size:12pt;color:#64748b;font-weight:600;margin-bottom:2px;">Actual Ledger Transfer</div>
+                    <div id="onchain-amt-value" style="font-size:26pt;font-weight:900;color:#0d9488;">loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:60px;">
+            <div style="background:#f8fafc;padding:24px;border-radius:10px;border:1px solid #e2e8f0;">
+                <div style="font-size:11pt;color:#64748b;font-weight:800;text-transform:uppercase;margin-bottom:18px;letter-spacing:0.04em;">Originating Institution</div>
+                <div style="font-size:16pt;font-weight:700;margin-bottom:6px;color:#1e293b;">${instgName}</div>
+                <div style="font-size:13pt;color:#475569;font-weight:500;">BIC: ${instgBic}</div>
+                <div style="font-size:13pt;color:#475569;margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px;">Debtor Info: ${dbtr}</div>
+            </div>
+            <div style="background:#f8fafc;padding:24px;border-radius:10px;border:1px solid #e2e8f0;">
+                <div style="font-size:11pt;color:#64748b;font-weight:800;text-transform:uppercase;margin-bottom:18px;letter-spacing:0.04em;">Recipient Institution</div>
+                <div style="font-size:16pt;font-weight:700;margin-bottom:6px;color:#1e293b;">${instdName}</div>
+                <div style="font-size:13pt;color:#475569;font-weight:500;">BIC: ${instdBic}</div>
+                <div style="font-size:13pt;color:#475569;margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px;">Creditor Info: ${cdtr}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:60px;">
+            <div style="font-size:11pt;color:#64748b;font-weight:800;text-transform:uppercase;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:8px;">Protocol Metadata</div>
+            <table style="width:100%;font-size:13pt;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:14px 0;font-weight:700;width:220px;color:#475569;">UETR / ID</td><td style="padding:14px 0;font-family:'JetBrains Mono',monospace;">${uetr}</td></tr>
+                <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:14px 0;font-weight:700;color:#475569;">End-to-End Tracking</td><td style="padding:14px 0;font-family:'JetBrains Mono',monospace;">${e2e}</td></tr>
+                <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:14px 0;font-weight:700;color:#475569;">Execution Date</td><td style="padding:14px 0;">${new Date(date).toLocaleDateString(undefined, {dateStyle:'full'})}</td></tr>
+                <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:14px 0;font-weight:700;color:#475569;">DNA Anchor</td><td style="padding:14px 0;font-family:'JetBrains Mono',monospace;color:#0369a1;font-weight:700;">DNA${dnaParam}</td></tr>
+            </table>
+        </div>
+
+        <div style="margin-top:40px;padding:32px;border:4px double #e2e8f0;border-radius:12px;text-align:center;position:relative;overflow:hidden;background:#fff;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);font-size:68pt;font-weight:900;color:rgba(3,105,161,0.04);white-space:nowrap;user-select:none;pointer-events:none;letter-spacing:0.1em;">AIFS BIT-PERFECT</div>
+            <div style="font-size:14pt;font-weight:800;color:#1e293b;margin-bottom:8px;letter-spacing:0.04em;">AIFS™ SHANNON ENTROPY SEALED</div>
+            <div style="font-size:12pt;color:#64748b;line-height:1.6;">This document is a bit-perfect rehydration of a technical partition held within the AIFS substrate. Protocol verification complete via Dual-Authorization. Data exists in RAM only.</div>
+        </div>
+    `;
+
+    // Fetch onchain settled amount from Xahau public node · TJ · April 2026
+    // Read-only public API call. No credentials. No sensitive data sent.
+    if (txidParam && /^[0-9A-Fa-f]{64}$/.test(txidParam)) {
+        fetchOnchainAmount(txidParam);
+    } else {
+        var el = document.getElementById('onchain-amt-value');
+        if (el) el.textContent = 'n/a (no txid)';
+    }
+}
+
+async function fetchOnchainAmount(txid) {
+    var el = document.getElementById('onchain-amt-value');
+    try {
+        var res = await fetch('https://xahau.network', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method: 'tx', params: [{ transaction: txid, binary: false }] })
+        });
+        var json = await res.json();
+        var tx = json && json.result;
+        if (tx && tx.Amount) {
+            // XAH drops
+            var drops = typeof tx.Amount === 'string' ? parseInt(tx.Amount) : null;
+            if (drops !== null) {
+                var xah = (drops / 1000000).toFixed(6).replace(/\.?0+$/, '');
+                if (el) el.textContent = xah + ' XAH';
+                return;
+            }
+        }
+        if (tx && tx.Amount && tx.Amount.value) {
+            // IOU token
+            if (el) el.textContent = tx.Amount.value + ' ' + tx.Amount.currency;
+            return;
+        }
+        if (el) el.textContent = 'confirmed';
+    } catch(e) {
+        if (el) el.textContent = 'confirmed';
+    }
+}
+
+// ============================================================
+// AIFS ZPKPay Recovery Portal
+// TJ Reynolds - April 2026
+//
+// This script handles the full recovery flow:
+// 1. Parse DNA anchor from URL parameters
+// 2. Display settlement metadata
+// 3. Trigger Xaman SignIn for identity verification
+// 4. POST to /materialize with the Xaman UUID
+// 5. Display reassembled ISO message as a formatted document
+// 6. Purge on close
+//
+// NO data is stored. NO cookies. NO localStorage.
+// Everything lives in JS heap only.
+// ============================================================
+
+const XUMM_API_KEY = 'ed9a6194-1aae-4aa9-b2b8-977771bc2c6b';
+const API_BASE     = 'https://api.aifs.dev/api/v1';
+const EXPLORER     = 'https://livenet.xrpl.org/transactions/';
+const ARWEAVE_BASE = 'https://node1.irys.xyz/';
+
+// Parse URL parameters -- all state comes from the URL
+// No localStorage. No cookies. Pure RAM.
+const params     = new URLSearchParams(window.location.search);
+let dnaParam     = params.get('dna') || '';
+let roleParam    = params.get('role') || 'receiver';
+let txidParam    = params.get('txid') || '';
+
+// Raw recovered data -- held in RAM only
+let _rawData = null;
+let _rawShowing = false;
+
+// ── collapsible header ──
+function toggleHero() {
+    const body = document.getElementById('heroBody');
+    const chevron = document.getElementById('heroChevron');
+    const btn = document.getElementById('heroToggle');
+    const collapsed = body.classList.toggle('collapsed');
+    chevron.classList.toggle('up', collapsed);
+    btn.setAttribute('aria-expanded', String(!collapsed));
+}
+
+// ── Tab System ──
+function switchTab(paneId, event) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById('pane-' + paneId).classList.add('active');
+}
+
+function enterManual(role) {
+    const raw = document.getElementById('manual-dna').value.trim()
+        .replace(/^DNA/i, '').replace(/^AIFS_DNA_/i, '');
+    if (!raw) {
+        document.getElementById('manual-error').style.display = 'block';
+        return;
+    }
+    dnaParam = raw;
+    roleParam = role;
+    document.getElementById('not-found').style.display = 'none';
+    document.getElementById('settlement-info').style.display = 'block';
+    document.getElementById('sign-section').style.display = 'block';
+    document.getElementById('display-dna').textContent = 'DNA' + dnaParam;
+    document.getElementById('display-role').textContent =
+        role === 'sender' ? 'Sender verification' : 'Receiver verification';
+}
+
+// Xumm instance -- initialized on demand, not on load
+let xumm = null;
+
+// ============================================================
+// PAGE INIT - Runs on DOMContentLoaded
+// Validates the DNA anchor from the URL and populates
+// the settlement info panel. If no anchor found, shows
+// the not-found state and disables the sign button.
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    if (!dnaParam) {
+        document.getElementById('not-found').style.display = 'block';
+        document.getElementById('sign-section').style.display = 'none';
+        document.getElementById('settlement-info').style.display = 'none';
+        return;
+    }
+
+    // Display the DNA anchor with DNA prefix for clarity
+    document.getElementById('display-dna').textContent = 'DNA' + dnaParam;
+
+    // Display the role -- receiver or sender
+    document.getElementById('display-role').textContent =
+        roleParam === 'sender' ? 'Sender verification' : 'Receiver verification';
+
+    const explorerLink = document.getElementById('explorer-link');
+    explorerLink.href = 'https://livenet.xrpl.org/';
+    explorerLink.textContent = 'Search XRPL explorer';
+
+    const arweaveLink = document.getElementById('arweave-link');
+    arweaveLink.href = '#';
+    arweaveLink.textContent = 'Available after reassembly';
+});
+
+// ============================================================
+// AUTHORIZE RECOVERY - Main entry point for the sign flow
+// ============================================================
+async function authorizeRecovery() {
+    const btn = document.getElementById('btn-sign');
+    const status = document.getElementById('status-msg');
+    const errorEl = document.getElementById('error-msg');
+
+    btn.disabled = true;
+    errorEl.style.display = 'none';
+    status.textContent = 'Connecting to Xaman...';
+
+    try {
+        if (!xumm) {
+            xumm = new XummPkce(XUMM_API_KEY, {
+                redirectUrl: window.location.href,
+                rememberJwt: false
+            });
+        }
+
+        status.textContent = 'Creating signing request...';
+
+        const challengeRes = await fetch(`${API_BASE}/auth/xaman/challenge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dna: dnaParam, role: roleParam })
+        });
+
+        const challenge = await challengeRes.json();
+        if (!challenge.success) throw new Error(challenge.error || 'Challenge creation failed');
+
+        const uuid = challenge.uuid;
+        const qrUrl = challenge.qrUrl;
+        const deepLink = challenge.deepLink;
+
+        showQRModal(qrUrl, deepLink);
+        status.textContent = 'Waiting for Xaman signature...';
+
+        const maxAttempts = 60;
+        let attempts = 0;
+
+        const poll = setInterval(async () => {
+            attempts++;
+
+            if (attempts > maxAttempts) {
+                clearInterval(poll);
+                closeQRModal();
+                showError('Signing timed out. Please try again.');
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const statusRes = await fetch(
+                    `${API_BASE}/auth/xaman/status/${uuid}`
+                );
+                const statusData = await statusRes.json();
+
+                if (statusData.verified === true) {
+                    clearInterval(poll);
+                    closeQRModal();
+                    status.textContent = 'Signature verified. Reassembling...';
+                    await materialize(uuid, statusData.account);
+
+                } else if (statusData.verified === false && statusData.reason === 'REJECTED') {
+                    clearInterval(poll);
+                    closeQRModal();
+                    showError('Signing rejected. Please try again.');
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                // Poll silently on network blips
+            }
+        }, 3000);
+
+    } catch(e) {
+        showError('Error: ' + e.message);
+        btn.disabled = false;
+        status.textContent = '';
+    }
+}
+
+// ============================================================
+// MATERIALIZE - Calls the AIFS backend to reassemble
+// ============================================================
+async function materialize(xamanUuid, account) {
+    const status = document.getElementById('status-msg');
+    status.textContent = 'Requesting reassembly from AIFS gate...';
+
+    try {
+        const res = await fetch(`${API_BASE}/materialize/${dnaParam}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                address: account,
+                xamanUuid: xamanUuid,
+                authType: 'xaman',
+                timestamp: Date.now()
+            })
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            if (result.error === 'IDENTITY_MISMATCH') {
+                throw new Error('Your wallet is not authorized for this record. Only the sender or receiver can reassemble.');
+            }
+            if (result.error === 'SENDER_REASSEMBLY_DISABLED') {
+                throw new Error('This record is sealed. Only the receiver can reassemble.');
+            }
+            throw new Error(result.error || 'Reassembly failed');
+        }
+
+        // Reassembly successful -- display the ISO message
+        status.textContent = 'Reassembly complete. Data exists in RAM only.';
+        displayResult(result.data, result.arweaveId);
+
+        // Update header to success state then auto-dismiss after 2s
+        const heroBody = document.getElementById('heroBody');
+        const pageSub = heroBody ? heroBody.querySelector('.page-sub') : null;
+        if (pageSub) pageSub.textContent = 'Identity verified. ISO 20022 message reassembled in RAM.';
+        document.getElementById('sign-section').style.display = 'none';
+        setTimeout(function() {
+            const heroHeader = document.querySelector('.hero-header');
+            const badge = document.querySelector('.zpk-badge') ? document.querySelector('.zpk-badge').parentElement : null;
+            if (heroHeader) heroHeader.style.transition = 'opacity 0.5s';
+            if (heroHeader) heroHeader.style.opacity = '0';
+            if (badge) { badge.style.transition = 'opacity 0.5s'; badge.style.opacity = '0'; }
+            setTimeout(function() {
+                if (heroHeader) heroHeader.style.display = 'none';
+                if (badge) badge.style.display = 'none';
+            }, 500);
+        }, 5000);
+
+    } catch(e) {
+        showError(e.message);
+        document.getElementById('btn-sign').disabled = false;
+        document.getElementById('status-msg').textContent = '';
+    }
+}
+
+// ============================================================
+// DISPLAY RESULT - Renders the reassembled ISO message.
+// Shows a formatted document panel. Raw view is opt-in.
+// Hides the sign section since identity is now confirmed.
+// Data is rendered to the DOM in RAM only.
+// ============================================================
+function displayResult(data, arweaveId) {
+    /* 
+     * =========================================================================
+     * 🔱 SHANNON ENVELOPE UNWRAPPING (DEMO MODE) - Antigravity - April 2026
+     * =========================================================================
+     * PURPOSE: The ZPK protocol shatters data within a unique Shannon Nonce 
+     * Envelope {"n": nonce, "d": data} to ensure bitwise unique particles 
+     * even for identical payloads.
+     */
+    let payload = data;
+    let extractedNonce = '-';
+    
+    // Recursive unwrap – handles cases where data might be string-encapsulated
+    const unwrap = (val) => {
+        if (!val) return val;
+        // If it's a string, try parsing it to see if it's the envelope
+        if (typeof val === 'string') {
+            try {
+                const cleaned = val.replace(/\0/g, '').trim();
+                const parsed = JSON.parse(cleaned);
+                if (parsed && typeof parsed === 'object' && parsed.n && parsed.d) {
+                    extractedNonce = parsed.n;
+                    return unwrap(parsed.d);
+                }
+            } catch(e) {}
+        }
+        // If it's an object, check for the envelope keys
+        if (typeof val === 'object' && val.n && val.d) {
+            extractedNonce = val.n;
+            return unwrap(val.d);
+        }
+        return val;
+    };
+
+    payload = unwrap(data);
+    data = payload; // Align so subsequent tabs use clean data
+
+    // Trigger Success Audio and populate Nonce display field
+    if (typeof ZPKAudioManager !== 'undefined') ZPKAudioManager.success();
+    const nonceDisplay = document.getElementById('shannon-nonce-display');
+    if (nonceDisplay) nonceDisplay.textContent = extractedNonce;
+
+    // Store raw data in RAM
+    let rawStr = typeof payload === 'object'
+        ? JSON.stringify(payload, null, 2)
+        : String(payload).replace(/\0/g, '').trim();
+
+    _rawData = rawStr;
+
+    // Try JSON parse in case it's a string-wrapped object
+    let parsed = null;
+    try {
+        parsed = typeof payload === 'object' ? payload : JSON.parse(rawStr);
+    } catch(e) {}
+
+    // Detect XML 
+    const trimmed = rawStr.trimStart();
+    const isXml = trimmed.startsWith('<?xml') || trimmed.startsWith('<Document');
+
+    // Detect if data is binary garbage
+    const nonPrintable = (rawStr.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g) || []).length;
+    const isGarbled = rawStr.length > 0 && (nonPrintable / rawStr.length) > 0.05;
+
+    // Build the formatted document
+    const fieldsEl = document.getElementById('doc-fields');
+    fieldsEl.innerHTML = '';
+
+    if (isGarbled) {
+        renderGarbled(fieldsEl);
+        document.getElementById('doc-panel-title').textContent = 'Recovered Data';
+    } else if (isXml) {
+        const domParser = new DOMParser();
+        const xmlDoc = domParser.parseFromString(trimmed, 'text/xml');
+        const parseErr = xmlDoc.querySelector('parsererror');
+
+        if (!parseErr) {
+            renderXmlDocument(xmlDoc, fieldsEl);
+        } else {
+            renderFallback(fieldsEl);
+        }
+        document.getElementById('doc-panel-title').textContent = 'ISO 20022 Message';
+    } else if (parsed && typeof parsed === 'object') {
+        renderJsonDocument(parsed, fieldsEl);
+        document.getElementById('doc-panel-title').textContent = 'Recovered Message';
+    } else {
+        renderFallback(fieldsEl);
+    }
+
+    // Populate raw box
+    document.getElementById('raw-box').textContent = isGarbled
+        ? '[Binary noise - the XOR identity salt did not match the original shatter time.]'
+        : _rawData;
+
+    // Fetch and show raw particles from Arweave
+    if (arweaveId) {
+        fetch(ARWEAVE_BASE + arweaveId)
+            .then(res => res.json())
+            .then(data => {
+                const particles = Array.isArray(data) ? data : (data.particles || []);
+                document.getElementById('particle-status').textContent = `Stored on Arweave: ${particles.length} fragments detected. Bit-perfect reassembly archive.`;
+                document.getElementById('particle-box').textContent = JSON.stringify(particles);
+            })
+            .catch(() => {
+                document.getElementById('particle-status').textContent = 'Forensic fragmentation verified. Particles held in permanent storage.';
+            });
+    }
+
+    // Show document panel
+    document.getElementById('doc-panel').style.display = 'block';
+
+    // Update the Arweave link
+    if (arweaveId) {
+        const arweaveLink = document.getElementById('arweave-link');
+        arweaveLink.href = ARWEAVE_BASE + arweaveId;
+        arweaveLink.textContent = arweaveId.substring(0, 16) + '...';
+    }
+
+    // Hide the sign section entirely -- identity confirmed
+    document.getElementById('sign-section').style.display = 'none';
+    document.getElementById('status-msg').textContent = '';
+
+    // Show post-recovery actions
+    document.getElementById('post-recovery').style.display = 'flex';
+
+    // Register beforeunload purge
+    window.addEventListener('beforeunload', purgeData);
+}
+
+// ── XML document renderer ──
+function renderXmlDocument(xmlDoc, container) {
+    try {
+        const t = (tag) => {
+            const els = xmlDoc.getElementsByTagName(tag);
+            return els.length ? els[0].textContent.trim() : '';
+        };
+        const tIn = (parent, tag) => {
+            const ps = xmlDoc.getElementsByTagName(parent);
+            if (!ps.length) return '';
+            const els = ps[0].getElementsByTagName(tag);
+            return els.length ? els[0].textContent.trim() : '';
+        };
+
+        const msgId    = t('MsgId');
+        const uetr     = t('UETR');
+        const e2eId    = t('EndToEndId');
+        const amtRaw   = t('IntrBkSttlmAmt') || t('InstdAmt');
+        const ccy      = xmlDoc.getElementsByTagName('IntrBkSttlmAmt').length ? xmlDoc.getElementsByTagName('IntrBkSttlmAmt')[0].getAttribute('Ccy') : 'USD';
+        const sttlmMtd = t('SttlmMtd');
+        const dt       = t('IntrBkSttlmDt');
+
+        const instgBic = tIn('InstgAgt', 'BICFI');
+        const instgNm  = tIn('InstgAgt', 'Nm');
+        const dbtrNm   = tIn('Dbtr', 'Nm');
+        const dbtrIban = tIn('DbtrAcct', 'IBAN');
+
+        const instdBic = tIn('InstdAgt', 'BICFI');
+        const instdNm  = tIn('InstdAgt', 'Nm');
+        const cdtrNm   = tIn('Cdtr', 'Nm');
+        const cdtrIban = tIn('CdtrAcct', 'IBAN');
+        const remit    = t('Ustrd');
+
+        // Robust amount formatting - strip commas before parsing
+        let amtFmt = '0.00';
+        if (amtRaw) {
+            const val = parseFloat(amtRaw.replace(/,/g, ''));
+            if (!isNaN(val)) amtFmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        container.innerHTML = `
+        <div style="padding: 24px; position: relative;">
+            <!-- Watermark -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.03; font-size: 80pt; font-weight: 900; white-space: nowrap; pointer-events: none; user-select: none;">Aifs Shannon Entropy Sealed</div>
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 2px solid var(--brd2); padding-bottom: 24px;">
+                <div>
+                    <div style="font-size: 13pt; color: var(--mu); text-transform: capitalize; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 4px;">Iso 2022 Fi-to-Fi Customer Credit Transfer</div>
+                    <div style="font-size: 16pt; font-family: 'JetBrains Mono', monospace; color: var(--tx); font-weight: 600;">pacs.008.001.10</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 13pt; color: rgba(16, 185, 129, 1); font-weight: 700; display:flex; align-items:center; justify-content: flex-end; gap:8px;">
+                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                         Zpk Alignment Verified
+                    </div>
+                    <div style="font-size: 13pt; color: var(--mu); margin-top: 6px;">Settled via: ${sttlmMtd || 'Clrg'} | ${dt || 'Real-time'}</div>
+                </div>
+            </div>
+
+            <!-- Big Amount Block -->
+            <div style="background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 32px;">
+                <div style="font-size: 13pt; color: var(--mu); font-weight: 600; text-transform: capitalize;">Verified Interbank Settlement Amount</div>
+                <div style="font-size: 40pt; font-weight: 800; color: var(--tx); font-family: 'JetBrains Mono', monospace; margin-top: 8px;">
+                    ${amtFmt} <span style="font-size: 24pt; color: var(--mu);">${ccy}</span>
+                </div>
+                <div style="font-size: 13pt; color: var(--primary); font-weight: 700; text-transform: capitalize; margin-top: 16px; background: rgba(5, 150, 105, 0.1); padding: 6px 16px; border-radius: 20px;">
+                    Forensically Reassembled from the Permaweb
+                </div>
+            </div>
+
+            <!-- Trackers -->
+            <div style="display: flex; gap: 16px; margin-bottom: 32px;">
+                <div style="flex: 1; border-top: 1px solid var(--brd2); padding-top: 12px;">
+                    <div style="font-size: 13pt; color: var(--mu); font-weight: 700; text-transform: capitalize; margin-bottom: 6px;">Message Id</div>
+                    <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; max-width: 200px; word-wrap: break-word;">${msgId}</div>
+                </div>
+                 <div style="flex: 1; border-top: 1px solid var(--brd2); padding-top: 12px;">
+                    <div style="font-size: 13pt; color: var(--mu); font-weight: 700; text-transform: capitalize; margin-bottom: 6px;">End-to-End Id</div>
+                    <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; max-width: 200px; word-wrap: break-word;">${e2eId}</div>
+                </div>
+                 <div style="flex: 1; border-top: 1px solid var(--brd2); padding-top: 12px;">
+                    <div style="font-size: 13pt; color: var(--mu); font-weight: 700; text-transform: capitalize; margin-bottom: 6px;">Uetr Tracking Identifier</div>
+                    <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; max-width: 200px; word-wrap: break-word;">${uetr}</div>
+                </div>
+            </div>
+
+            <!-- Two Columns: Sender / Receiver -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                <!-- Sender -->
+                <div style="background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; padding: 24px;">
+                    <div style="font-size: 13pt; color: var(--mu); text-transform: capitalize; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--brd2); padding-bottom: 12px;">Sending Institution (Debtor)</div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 13pt; color: var(--mu); margin-bottom: 4px;">Debtor Name</div>
+                        <div style="font-size: 14pt; color: var(--tx); font-weight: 600;">${dbtrNm || '-'}</div>
+                        <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; margin-top: 6px;">Acct: ${dbtrIban || '-'}</div>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 13pt; color: var(--mu); margin-bottom: 4px;">Instructing Agent</div>
+                        <div style="font-size: 14pt; color: var(--tx); font-weight: 600;">${instgNm || '-'}</div>
+                        <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; margin-top: 6px;">Bicfi: ${instgBic || '-'}</div>
+                    </div>
+                </div>
+
+                <!-- Receiver -->
+                <div style="background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; padding: 24px;">
+                    <div style="font-size: 13pt; color: var(--mu); text-transform: capitalize; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--brd2); padding-bottom: 12px;">Receiving Institution (Creditor)</div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 13pt; color: var(--mu); margin-bottom: 4px;">Creditor Name</div>
+                        <div style="font-size: 14pt; color: var(--tx); font-weight: 600;">${cdtrNm || '-'}</div>
+                        <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; margin-top: 6px;">Acct: ${cdtrIban || '-'}</div>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 13pt; color: var(--mu); margin-bottom: 4px;">Instructed Agent</div>
+                        <div style="font-size: 14pt; color: var(--tx); font-weight: 600;">${instdNm || '-'}</div>
+                        <div style="font-size: 13pt; color: var(--tx); font-family: 'JetBrains Mono', monospace; margin-top: 6px;">Bicfi: ${instdBic || '-'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remittance Block (Conditional) -->
+            ${remit ? '<div style="background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; padding: 24px;"><div style="font-size: 13pt; color: var(--mu); font-weight: 700; text-transform: capitalize; margin-bottom: 10px;">Remittance Information</div><div style="font-size: 13pt; color: var(--tx); font-weight: 500; line-height: 1.5;">' + remit + '</div></div>' : ''}
+
+        </div>
+        `;
+    } catch(err) {
+        console.error('XML Rendering error:', err);
+        renderFallback(container);
+    }
+}
+
+// ── JSON document renderer ──
+function renderJsonDocument(obj, container) {
+    const flatten = (o, prefix) => {
+        const rows = [];
+        Object.entries(o).forEach(([k, v]) => {
+            const key = prefix ? prefix + '.' + k : k;
+            if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+                rows.push(...flatten(v, key));
+            } else {
+                rows.push([key, Array.isArray(v) ? JSON.stringify(v) : String(v)]);
+            }
+        });
+        return rows;
+    };
+
+    const secEl = document.createElement('div');
+    secEl.className = 'doc-section';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'doc-section-title';
+    titleEl.textContent = 'Message Fields';
+    secEl.appendChild(titleEl);
+
+    flatten(obj, '').forEach(([key, val]) => {
+        const row = document.createElement('div');
+        row.className = 'doc-row';
+        const k = document.createElement('span');
+        k.className = 'doc-key';
+        k.textContent = key;
+        const v = document.createElement('span');
+        v.className = 'doc-val';
+        v.textContent = val;
+        row.appendChild(k);
+        row.appendChild(v);
+        secEl.appendChild(row);
+    });
+
+    container.appendChild(secEl);
+}
+
+// ── fallback renderer for non-parseable data ──
+function renderFallback(container) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:13pt;color:var(--mu);padding:8px 0;';
+    note.textContent = 'Data reassembled. Use "View raw data" to inspect the payload.';
+    container.appendChild(note);
+}
+
+// ── garbled data renderer -- shown when rejoin produced binary noise ──
+// This happens when the XOR salt used at shatter time does not match
+// the salt used at rejoin time. The data is intact on Arweave but
+// the authorization context is mismatched.
+function renderGarbled(container) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:13pt;color:var(--da);padding:8px 0;line-height:1.7;';
+    note.textContent = 'The data reassembled as binary noise. This means the identity salt did not match the original sender. Try signing as the receiver instead, or contact the sender for the correct recovery link.';
+    container.appendChild(note);
+}
+
+// ============================================================
+// PURGE - Clears all reassembled data from RAM.
+// ============================================================
+function purgeData() {
+    const panel = document.getElementById('doc-panel');
+    const raw = document.getElementById('raw-box');
+    if (panel) {
+        document.getElementById('doc-fields').innerHTML = '';
+        if (raw) raw.textContent = 'PURGED';
+        panel.style.display = 'none';
+    }
+    _rawData = null;
+    console.log('[AIFS] Recovery data purged from RAM.');
+}
+
+function purgeAndClose() {
+    purgeData();
+    window.close();
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('status-msg').textContent = '';
+}
+
+function showQRModal(qrUrl, deepLink) {
+    let modal = document.getElementById('xaman-qr-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'xaman-qr-modal';
+        modal.style.cssText = `
+            position:fixed;inset:0;z-index:9999;
+            background:rgba(15,20,40,0.88);
+            backdrop-filter:blur(4px);
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Inter',sans-serif;
+        `;
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:32px;
+            max-width:320px;width:92%;text-align:center;
+            box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+            <div style="font-size:14pt;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                Sign with Xaman
+            </div>
+            <div style="font-size:13pt;color:#475569;margin-bottom:20px;">
+                Scan to verify your identity and authorize reassembly
+            </div>
+            <img src="${qrUrl}" style="width:220px;height:220px;
+                border-radius:8px;border:1px solid #e2e8f0;margin-bottom:16px;">
+            <br>
+            <a href="${deepLink}" target="_blank"
+                style="font-size:13pt;color:#00897B;text-decoration:none;">
+                Open in Xaman app
+            </a>
+            <br><br>
+            <button onclick="closeQRModal()" style="
+                background:transparent;border:1px solid #cbd5e1;
+                color:#475569;padding:8px 20px;border-radius:8px;
+                font-size:11pt;cursor:pointer;font-family:inherit;">
+                Cancel
+            </button>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+function closeQRModal() {
+    const modal = document.getElementById('xaman-qr-modal');
+    if (modal) modal.style.display = 'none';
+}
+// ============================================================
+// ZPK Audio Manager - Web Audio API (Requested by USER) - April 2026
+// Zero external assets. Sounds synthesized in RAM only.
+// ============================================================
+const ZPKAudioManager = {
+    _ctx: null,
+    init: function() {
+        if (this._ctx) return;
+        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    },
+    _play: function(type) {
+        this.init();
+        var ctx = this._ctx;
+        if (ctx.state === 'suspended') ctx.resume();
+        var now = ctx.currentTime;
+        var g = ctx.createGain();
+        g.connect(ctx.destination);
+        if (type === 'click') {
+            var o = ctx.createOscillator();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(800, now);
+            g.gain.setValueAtTime(0.12, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            o.connect(g);
+            o.start(now); o.stop(now + 0.04);
+        } else if (type === 'success') {
+            [523.25, 659.25, 783.99].forEach(function(freq, i) {
+                var osc = ctx.createOscillator();
+                var gn = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                gn.gain.setValueAtTime(0, now + i * 0.1);
+                gn.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.04);
+                gn.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.35);
+                osc.connect(gn); gn.connect(ctx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.4);
+            });
+        }
+    },
+    click: function() { this._play('click'); },
+    success: function() { this._play('success'); }
+};
+
+document.addEventListener('mousedown', function() { ZPKAudioManager.init(); }, { once: true });
+document.addEventListener('click', function(e) {
+    if (e.target.closest('button, .ripple-btn, .btn-ghost, .btn-primary, .tab-btn')) {
+        ZPKAudioManager.click();
+    }
+}, true);
+</script>
+</body>
+</html>

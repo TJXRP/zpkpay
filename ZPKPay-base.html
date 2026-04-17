@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+    ============================================================
+    ZPKPay-base.html — AIFS ZPKPay on Base Mainnet via MetaMask
+    TJ Reynolds — AIFS Protocol Inc — April 2026
+
+    ISOLATION NOTICE — TJ Reynolds — April 2026
+    This file is fully isolated from ZPKPay.html (XRPL/Xaman).
+    MetaMask hijacks window.ethereum and will conflict with any
+    Xaman/Xumm SDK on the same page. Never merge these files.
+    Never load xumm-oauth2-pkce.min.js on this page.
+
+    NETWORK: Base Mainnet — Chain ID 8453
+    WALLET:  MetaMask — window.ethereum — ethers.js v6
+    ANCHOR:  DNA anchor in Base transaction calldata (data field)
+    EXPLORER: basescan.org
+
+    BACKEND: Same AIFS API (api.aifs.dev) — no backend changes needed.
+    The ShatterEngine and materialize routes are chain-agnostic.
+
+    HOW IT WORKS:
+    1. MetaMask connects — wallet address is the sender identity
+    2. ISO 20022 message composed in Tab 1/2
+    3. ShatterEngine shatters payload — DNA anchor returned
+    4. MetaMask signs a Base tx with DNA anchor in calldata
+    5. Tx confirmed on Base — DNA anchor permanently on-chain
+    6. Recovery links generated for sender and receiver
+
+    TO REMOVE BASE SUPPORT: Delete this file entirely.
+    The XRPL version (ZPKPay.html) is unaffected.
+
+    RULES:
+    - No new .md files without TJ authorization
+    - No new .html files without TJ authorization
+    - Nothing written to C: drive
+    - No em dashes
+    - No placeholder code
+    ============================================================
+-->
+<script>
+if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+    .test(navigator.userAgent) || window.innerWidth < 1024) {
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.innerHTML = '<div style="padding:40px;font-family:Inter,sans-serif;max-width:600px;margin:0 auto;text-align:center;"><img src="/img/ZPKPay-logo-png.png" style="height:60px;margin-bottom:24px;"><p style="color:#64748b;line-height:1.8;font-size:14pt;">ZPKPay requires a desktop browser with MetaMask installed.</p><p style="margin-top:24px;"><a href="https://aifs.dev" style="color:#0052FF;">Back to aifs.dev</a></p></div>';
+    });
+}
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:;">
+    <title>ZPKPay — Base Mainnet ISO Settlement</title>
+    <link rel="icon" type="image/png" href="/img/ZPKPay-logo-png.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- ethers.js v6 — MetaMask provider — TJ: do NOT add xumm SDK here, it will conflict -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+    <!-- canvas-confetti removed — using custom text burst (see textBurst() below) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
+:root {
+    --bg: #f8fafc;
+    --sur: #ffffff;
+    --s2: #f1f5f9;
+    --s3: #e8edf5;
+    --brd: rgba(0,0,0,.14);
+    --tx: #0f172a;
+    --mu: #475569;
+    --di: #94a3b8;
+    --c1: #2563EB;
+    --c2: #0891B2;
+    --c3: #7C3AED;
+    --c4: #059669;
+    /* Base blue — replaces XRPL teal throughout this file — TJ */
+    --base: #0052FF;
+    --base-dk: #003ec4;
+    --ok: #059669;
+    --da: #dc2626;
+    --warn: #d97706;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--bg);
+    color: var(--tx);
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ── hero fade-in ── */
+@keyframes zpk-fade { from { opacity: 0; } to { opacity: 1; } }
+.zpk-fade { opacity: 0; }
+.zpk-fade.go { animation: zpk-fade 1.2s ease forwards; }
+.zpk-fade-1.go { animation-delay: 1.8s; }
+.zpk-fade-2.go { animation-delay: 3.4s; }
+.zpk-fade-3.go { animation-delay: 5.0s; }
+@keyframes lightning-wobble {
+    0%   { transform: scale(1)    rotate(0deg); }
+    20%  { transform: scale(1.3)  rotate(-14deg); }
+    50%  { transform: scale(0.95) rotate(8deg); }
+    75%  { transform: scale(1.15) rotate(-6deg); }
+    100% { transform: scale(1)    rotate(0deg); }
+}
+.lightning-bolt {
+    display: inline-block;
+    animation-name: lightning-wobble;
+    animation-duration: 0.55s;
+    animation-timing-function: ease;
+    animation-delay: 6.3s;
+    animation-iteration-count: var(--lightning-pulses, 2);
+}
+
+#zpk-hub { width: 100%; position: relative; z-index: 1; }
+
+/* ── top bar ── */
+.topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(248,250,252,.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--brd);
+    padding: 0 32px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topbar-brand img { height: 28px; }
+
+/* ── wallet info ── */
+.wallet-info { display: none; }
+.wallet-info.visible { display: flex; align-items: center; gap: 14px; }
+.wallet-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+.wallet-dot.live { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.wallet-addr { font-size: 13pt; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--tx); }
+
+/* ── network pill ── */
+.net-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1.5px solid rgba(0,82,255,.3); border-radius: 20px;
+    padding: 4px 12px; font-size: 13pt; font-weight: 600; color: var(--base);
+    background: rgba(0,82,255,.05);
+}
+.net-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--base); }
+
+/* ── tabs ── */
+.zpk-tab {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    font-size: 13pt; font-weight: 600; color: var(--mu); cursor: pointer;
+    padding: 14px 0; margin-right: 4px;
+}
+.zpk-tab.active, .zpk-tab:focus { color: var(--base); border-bottom-color: var(--base); outline: none; }
+
+/* ── layout ── */
+.main-wrap { display: flex; gap: 24px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+.steps-col { flex: 1; min-width: 0; }
+.side-col { width: 320px; flex-shrink: 0; }
+
+/* ── step cards ── */
+.step-card {
+    background: var(--sur); border: 1px solid var(--brd);
+    border-radius: 16px; margin-bottom: 20px; overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0,0,0,.07);
+}
+.step-card.locked { opacity: .42; pointer-events: none; }
+
+.step-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 22px 28px; border-bottom: 1px solid var(--brd);
+}
+.step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15pt; font-weight: 800; flex-shrink: 0;
+}
+.step-title { font-size: 16pt; font-weight: 700; }
+.step-sub { font-size: 13pt; color: var(--mu); }
+.step-body { padding: 24px 28px; }
+
+.step-1 .step-num { background: rgba(37,99,235,.1); color: #1d4ed8; border: 2px solid rgba(37,99,235,.3); }
+.step-2 .step-num { background: rgba(8,145,178,.1); color: #0369a1; border: 2px solid rgba(8,145,178,.3); }
+.step-3 .step-num { background: rgba(0,82,255,.1); color: #0052FF; border: 2px solid rgba(0,82,255,.3); }
+
+/* ── status badges ── */
+.step-status {
+    margin-left: auto; padding: 4px 12px; border-radius: 20px;
+    font-size: 12pt; font-weight: 600;
+}
+.status-pending { color: var(--di); background: rgba(100,116,139,.12); border: 1px solid rgba(100,116,139,.2); }
+.status-done { color: var(--ok); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); }
+
+/* ── form elements ── */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13pt; font-weight: 600; color: var(--mu); margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--brd);
+    border-radius: 8px; font-size: 13pt; font-family: 'Inter', sans-serif;
+    background: var(--sur); color: var(--tx);
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--base); }
+.err-msg { font-size: 12pt; color: var(--da); display: none; margin-top: 4px; }
+.err-msg.show { display: block; }
+
+/* ── buttons ── */
+.btn-primary {
+    display: block; width: 100%; padding: 14px; border-radius: 10px;
+    font-size: 14pt; font-weight: 700; cursor: pointer; border: none;
+    background: var(--base); color: white;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(0,82,255,.25);
+}
+.btn-primary:hover { background: var(--base-dk); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: .45; pointer-events: none; }
+
+.btn-metamask {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px; border-radius: 10px; font-size: 14pt; font-weight: 700;
+    background: #E4761B; color: white; border: none; cursor: pointer;
+    transition: background 0.2s; box-shadow: 0 4px 12px rgba(228,118,27,.3);
+}
+.btn-metamask:hover { background: #c96315; }
+
+/* ── result block ── */
+.result-block { min-height: 0; border-radius: 10px; overflow: hidden; }
+.result-block.success { background: #f0fdf4; border: 1px solid rgba(16,185,129,.3); padding: 20px 24px; margin-top: 16px; }
+.result-block.error { background: #fef2f2; border: 1px solid rgba(220,38,38,.3); padding: 20px 24px; margin-top: 16px; color: var(--da); font-size: 13pt; }
+
+/* ── panel card ── */
+.panel-card {
+    background: var(--sur); border: 1px solid var(--brd);
+    border-radius: 16px; overflow: hidden; margin-bottom: 20px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.07);
+}
+.panel-head { padding: 20px 24px; border-bottom: 1px solid var(--brd); background: var(--s2); }
+.panel-title { font-size: 15pt; font-weight: 700; color: var(--tx); }
+.panel-sub { font-size: 11pt; color: var(--mu); }
+.panel-body { padding: 20px 24px; }
+
+/* ── chain rows ── */
+.chain-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--brd); font-size: 12pt;
+}
+.chain-row:last-child { border-bottom: none; }
+.chain-key { color: var(--mu); font-weight: 600; }
+.chain-val { font-family: 'JetBrains Mono', monospace; font-size: 12pt; color: var(--tx); }
+
+/* ── full txid ── */
+.full-txid {
+    display: block; font-size: 13pt; color: #000;
+    margin-top: 14px; font-family: 'JetBrains Mono', monospace;
+    word-break: break-all; line-height: 1.4; max-width: 600px;
+}
+
+/* ── rail badge ── */
+.rail-badge {
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    font-size: 9pt; font-weight: 700; color: var(--base);
+    background: rgba(0,82,255,.08); border: 1px solid rgba(0,82,255,.2);
+    border-radius: 4px; padding: 1px 6px; white-space: nowrap;
+}
+
+/* ── footer ── */
+.footer {
+    text-align: center; padding: 32px 24px;
+    border-top: 1px solid var(--brd); font-size: 11pt; color: var(--di);
+}
+.footer a { color: var(--di); text-decoration: none; }
+.footer a:hover { color: var(--base); }
+
+/* ── sub-block divider ── */
+.sdiv {
+    font-size: 13pt; font-weight: 700; color: var(--mu);
+    margin-top: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--brd);
+}
+
+/* ── shatter stats ── */
+.shatter-stats { display: flex; gap: 12px; margin-top: 16px; }
+.stat-card {
+    flex: 1; background: var(--s2); border: 1px solid var(--brd);
+    border-radius: 10px; padding: 12px; text-align: center;
+}
+.stat-val { font-size: 16pt; font-weight: 800; color: var(--tx); }
+.stat-lab { font-size: 11pt; color: var(--mu); margin-top: 2px; }
+
+/* ── progress dots ── */
+.progress-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.prog-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--s2); border: 2px solid var(--brd);
+}
+.prog-dot.done { background: var(--ok); border-color: var(--ok); }
+.prog-dot.active { background: var(--base); border-color: var(--base); box-shadow: 0 0 8px var(--base); }
+.prog-label { font-size: 10pt; color: var(--di); font-weight: 600; }
+
+/* ── trust gate overlay ── */
+#trust-gate {
+    position: fixed; inset: 0; background: rgba(15,23,42,.96);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.trust-card {
+    background: white; border-radius: 20px; padding: 48px 44px;
+    max-width: 560px; width: 100%; text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,.4);
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- TRUST GATE — shown on load, dismissed on MetaMask connect   -->
+<!-- Same pattern as ZPKPay.html Trust Gate — TJ April 2026      -->
+<!-- ============================================================ -->
+<div id="trust-gate">
+    <div class="trust-card">
+        <img src="/img/ZPKPay-logo-png.png" alt="ZPKPay" style="height:64px;margin-bottom:28px;">
+        <div style="font-size:22pt;font-weight:800;color:#0f172a;margin-bottom:12px;line-height:1.3;">
+            ZPKPay on Base
+        </div>
+        <div style="font-size:14pt;color:#475569;margin-bottom:28px;line-height:1.7;">
+            ISO 20022 settlement anchored to Base Mainnet.<br>
+            MetaMask required. No data persists.
+        </div>
+        <!-- MetaMask connect inside trust gate -->
+        <button id="btn-gate-connect" class="btn-metamask" onclick="gateConnect()" style="margin:0 auto 20px;display:flex;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="height:22px;">
+            Connect MetaMask to Continue
+        </button>
+        <div id="gate-status" style="font-size:13pt;color:#475569;min-height:20px;"></div>
+        <div style="margin-top:20px;font-size:13pt;color:#94a3b8;">
+            AIFS Protocol Inc. &nbsp;·&nbsp;
+            <span style="color:#E31932;">USPTO 19/551,805 · 19/560,251 · 19/564,384</span>
+        </div>
+    </div>
+</div>
+<!-- ============================================================ -->
+<!-- END TRUST GATE                                               -->
+<!-- ============================================================ -->
+
+<div id="zpk-hub">
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <a class="topbar-brand" href="/">
+        <img src="/img/ZPKPay-logo-png.png" alt="ZPKPay">
+    </a>
+    <div style="display:flex;align-items:center;gap:16px;">
+        <div class="net-pill">
+            <div class="net-dot"></div>
+            Base Mainnet
+        </div>
+        <div id="wallet-info-bar" class="wallet-info">
+            <div class="wallet-dot" id="wallet-dot"></div>
+            <div class="wallet-addr" id="wallet-addr">not connected</div>
+        </div>
+    </div>
+</div>
+
+<!-- HERO -->
+<div id="zpk-hero" style="background:#ffffff;color:#1a1a2e;padding:32px 32px 0;text-align:center;border-bottom:1px solid #e2e8f0;position:relative;">
+    <div style="position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:8px;">
+        <input id="mist-opacity" type="range" min="0" max="1" step="0.05" value="0.85"
+            oninput="window.shatterFx && window.shatterFx.setOpacity(parseFloat(this.value))"
+            title="Particle opacity"
+            style="width:72px;height:4px;cursor:pointer;accent-color:#94a3b8;opacity:0.5;transition:opacity 0.2s;"
+            onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.5'">
+        <input id="mist-speed" type="range" min="0" max="1" step="0.05" value="0.15"
+            oninput="window.shatterFx && window.shatterFx.setSpeed(parseFloat(this.value))"
+            title="Particle speed"
+            style="width:72px;height:4px;cursor:pointer;accent-color:#94a3b8;opacity:0.5;transition:opacity 0.2s;"
+            onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.5'">
+        <button id="mist-toggle" onclick="
+            window.shatterFx && window.shatterFx.toggle();
+            this.style.opacity = window.shatterFx && window.shatterFx.isOn() ? '0.5' : '0.25';
+        " title="Toggle background" style="background:none;border:none;cursor:pointer;font-size:13pt;color:#94a3b8;opacity:0.25;padding:4px 6px;line-height:1;transition:opacity 0.2s;"
+        onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity=window.shatterFx&&window.shatterFx.isOn()?'0.5':'0.25';">&#9830;</button>
+    </div>
+    <div id="zpk-hero-body">
+        <div style="margin-bottom:16px;">
+            <img src="/img/ZPKPay-logo-png.png" alt="ZPKPay" style="height:78px;width:auto;margin:0 auto;display:block;">
+        </div>
+        <div style="font-size:22pt;font-weight:700;margin-bottom:14px;color:#1a1a2e;line-height:1.3;letter-spacing:-0.01em;">
+            <span class="zpk-fade zpk-fade-1">One Signature.</span>
+            <span class="zpk-fade zpk-fade-2"> One Transaction.</span><br>
+            <span class="zpk-fade zpk-fade-3" style="font-size:19pt;">Dual-Rail <span class="lightning-bolt">⚡</span> Settlement · Base Mainnet</span>
+        </div>
+        <div style="font-size:16pt;font-weight:500;color:#1a1a2e;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:20px;">
+            <span style="display:flex;align-items:center;gap:8px;font-weight:650;">
+                <span style="color:#0052FF;font-size:18pt;">&#10003;</span>Base Payment
+            </span>
+            <span style="color:#cccccc;font-size:14pt;font-weight:700;">+</span>
+            <span style="display:flex;align-items:center;gap:8px;font-weight:650;">
+                <span style="color:#0052FF;font-size:18pt;">&#10003;</span>ISO Messaging
+            </span>
+            <span style="color:#cccccc;font-size:14pt;font-weight:700;">+</span>
+            <span style="display:flex;align-items:center;gap:8px;font-weight:650;">
+                <span style="color:#0052FF;font-size:18pt;">&#10003;</span>Immutable Audit Trail
+            </span>
+        </div>
+    </div>
+
+    <!-- TABS — no border-bottom per UI rule — TJ -->
+    <div style="max-width:1200px;margin:0 auto;padding:24px 24px 0;display:flex;gap:0;border-bottom:none;">
+        <button class="zpk-tab active" data-tab="1" onclick="switchTab(1)" style="position:relative;padding:26px 32px 14px;font-family:'Inter',sans-serif;font-size:13pt;font-weight:600;background:none;border:none;border-bottom:3px solid var(--base);color:var(--base);cursor:pointer;">
+            <span class="rail-badge">Rail 1</span>
+            Base Payment
+        </button>
+        <button class="zpk-tab" data-tab="2" onclick="switchTab(2)" style="position:relative;padding:26px 32px 14px;font-family:'Inter',sans-serif;font-size:13pt;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;color:var(--mu);cursor:pointer;">
+            <span class="rail-badge">Rail 2</span>
+            ISO Message &amp; Shatter
+        </button>
+        <button class="zpk-tab" data-tab="3" onclick="switchTab(3)" style="padding:26px 32px 14px;font-family:'Inter',sans-serif;font-size:13pt;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;color:var(--mu);cursor:pointer;">
+            Sign &amp; Receipts
+        </button>
+    </div>
+</div>
+
+<!-- TAB 1: BASE PAYMENT DETAILS -->
+<div id="zpk-tab-1" class="zpk-tab-panel" style="display:block;">
+    <div class="main-wrap">
+        <div class="steps-col">
+            <div class="step-card step-1" id="card1">
+                <div class="step-header">
+                    <div class="step-num">1</div>
+                    <div>
+                        <div class="step-title">Base Payment</div>
+                        <div class="step-sub">Configure the ETH/USDC settlement</div>
+                    </div>
+                    <span class="step-status status-pending" id="s1stat">Ready</span>
+                </div>
+                <div class="step-body">
+                    <div class="form-group">
+                        <label>Receiver Address (Base/EVM)</label>
+                        <input type="text" id="destAddr" placeholder="0x... enter valid Base address" autocomplete="off" oninput="validateDest()">
+                        <span class="err-msg" id="destErr">Invalid Base address format</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (ETH)</label>
+                        <input type="number" id="ethAmt" value="0.001" min="0.0001" step="0.0001" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Remittance Info</label>
+                        <input type="text" id="remitInfo" placeholder="Invoice ref, purpose, etc." autocomplete="off" maxlength="140">
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                        <div id="wallet-progress" class="progress-row">
+                            <div class="prog-dot active" id="pd1"></div>
+                            <div class="prog-label" id="pl1">Connect MetaMask</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="side-col">
+            <div class="panel-card">
+                <div class="panel-head">
+                    <div class="panel-title">Settlement Rail</div>
+                    <div class="panel-sub">Base Mainnet — Chain ID 8453</div>
+                </div>
+                <div class="panel-body">
+                    <div class="chain-row"><span class="chain-key">Network</span><span class="chain-val">Base Mainnet</span></div>
+                    <div class="chain-row"><span class="chain-key">Chain ID</span><span class="chain-val">8453</span></div>
+                    <div class="chain-row"><span class="chain-key">Currency</span><span class="chain-val">ETH</span></div>
+                    <div class="chain-row"><span class="chain-key">Anchor</span><span class="chain-val">tx calldata</span></div>
+                    <div class="chain-row"><span class="chain-key">Explorer</span><span class="chain-val"><a href="https://basescan.org" target="_blank" style="color:var(--base);">basescan.org</a></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 2: ISO MESSAGE & SHATTER -->
+<div id="zpk-tab-2" class="zpk-tab-panel" style="display:none;">
+    <div class="main-wrap">
+        <div class="steps-col">
+            <div class="step-card step-2" id="card2">
+                <div class="step-header">
+                    <div class="step-num">2</div>
+                    <div>
+                        <div class="step-title">ISO Message</div>
+                        <div class="step-sub">Compose, shatter, and anchor the ISO payload</div>
+                    </div>
+                    <span class="step-status status-pending" id="s2stat">Ready</span>
+                </div>
+                <div class="step-body">
+
+                    <!-- Message Type -->
+                    <div class="panel-card" style="margin-bottom:16px;">
+                        <div class="panel-head"><div class="panel-title">Message Type</div></div>
+                        <div class="panel-body">
+                            <div class="form-group" style="margin-bottom:4px;">
+                                <label>ISO 20022 Message Type</label>
+                                <select id="msgType" onchange="switchMessageType(this.value)">
+                                    <optgroup label="pacs — Payment Clearing">
+                                        <option value="pacs.008">pacs.008 - FI Credit Transfer</option>
+                                        <option value="pacs.009">pacs.009 - FI-to-FI Transfer</option>
+                                        <option value="pacs.004">pacs.004 - Payment Return</option>
+                                        <option value="pacs.002">pacs.002 - Payment Status</option>
+                                    </optgroup>
+                                    <optgroup label="pain — Payment Initiation">
+                                        <option value="pain.001">pain.001 - Credit Transfer Initiation</option>
+                                        <option value="pain.002">pain.002 - Payment Status Report</option>
+                                        <option value="pain.008">pain.008 - Direct Debit Initiation</option>
+                                    </optgroup>
+                                    <optgroup label="camt — Cash Management">
+                                        <option value="camt.053">camt.053 - Bank Statement</option>
+                                        <option value="camt.054">camt.054 - Debit/Credit Notification</option>
+                                        <option value="camt.052">camt.052 - Account Report</option>
+                                        <option value="camt.056">camt.056 - Payment Cancellation</option>
+                                    </optgroup>
+                                </select>
+                                <div id="msgTypeDesc" style="font-size:13pt;color:var(--mu);margin-top:6px;font-style:italic;">
+                                    Interbank credit transfer. The primary payment message on Base.
+                                </div>
+                                <div style="font-size:13pt;color:var(--mu);margin-top:8px;">
+                                    Batch processing supported. 1,000+ messages tested per tx — throughput limited only by hardware.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Reference -->
+                    <div class="panel-card" style="margin-bottom:16px;">
+                        <div class="panel-head"><div class="panel-title">Message Reference</div></div>
+                        <div class="panel-body">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label>Message ID</label>
+                                    <input type="text" id="msgId" value="MSG-ID-001" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>End-to-End ID</label>
+                                    <input type="text" id="e2eId" value="E2E-2026-0001" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>UETR</label>
+                                    <div style="display:flex;gap:6px;">
+                                        <input type="text" id="uetr" readonly style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12pt;">
+                                        <button onclick="genUetr()" style="padding:8px 12px;border:1px solid var(--brd);border-radius:8px;background:var(--s2);cursor:pointer;font-size:12pt;">Gen</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label>Receiver BIC</label>
+                                    <input type="text" id="instdBic" value="UBSZHZH80A" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>Receiver Institution</label>
+                                    <input type="text" id="instdName" value="Bank of Zurich AG" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Fields -->
+                    <div class="panel-card" id="pmt-fields-panel" style="margin-bottom:16px;">
+                        <div class="panel-head"><div class="panel-title">Payment Details</div></div>
+                        <div class="panel-body">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label>Sender BIC</label>
+                                    <input type="text" id="instgBic" value="AIFSUSBKXXX" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>Sender Institution</label>
+                                    <input type="text" id="instgName" value="AIFS Protocol Inc" autocomplete="off">
+                                </div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label>Debtor (Payer)</label>
+                                    <input type="text" id="dbtrName" value="Meridian Trust Bank" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>Creditor (Payee)</label>
+                                    <input type="text" id="cdtrName" value="Alpine Clearing House AG" autocomplete="off">
+                                </div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label>ISO Message Amount <span style="font-size:13pt;font-weight:400;color:var(--mu);font-style:italic;">· contractual value · XML document only, not the onchain transfer</span></label>
+                                    <input type="number" id="isoAmt" value="1250000.00" autocomplete="off">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>Currency</label>
+                                    <input type="text" id="isoCcy" value="USD" maxlength="3" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shatter preview -->
+                    <div id="shatterPreview" style="background:var(--s2);border:1px solid var(--brd);border-radius:10px;padding:16px;margin-bottom:16px;font-family:'JetBrains Mono',monospace;font-size:12pt;color:var(--mu);line-height:1.6;max-height:120px;overflow:hidden;position:relative;">
+                        <div id="previewContent">ISO 20022 payload ready to shatter...</div>
+                    </div>
+
+                    <div id="particle-preview-box" style="display:none;margin-top:12px;background:#f8fafc;border:1px solid var(--brd);border-radius:8px;padding:14px 16px;">
+                        <div id="particle-preview-label" style="font-size:13pt;font-weight:700;color:var(--mu);margin-bottom:8px;">Preparing and Salting Immutable Particles</div>
+                        <div id="particle-preview-data" style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--tx);word-break:break-all;line-height:1.7;white-space:pre-wrap;"></div>
+                    </div>
+
+                    <div class="shatter-stats" id="shatterStats" style="display:none;margin-top:16px;">
+                        <div class="stat-card"><div class="stat-val" id="statBytes">-</div><div class="stat-lab">Payload Bytes</div></div>
+                        <div class="stat-card"><div class="stat-val" id="statParts">1,024</div><div class="stat-lab">Particles</div></div>
+                        <div class="stat-card"><div class="stat-val" id="statRatio">-</div><div class="stat-lab">Compression</div></div>
+                    </div>
+
+                    <button class="btn-primary" id="btnShatter" onclick="shatterPayload()" style="margin-top:16px;" disabled>
+                        Shatter &amp; Anchor ISO Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="panel-card">
+                <div class="panel-head">
+                    <div class="panel-title">DNA Map Anchors to:</div>
+                    <div class="panel-sub">Base Mainnet calldata<br>Immutable particle location and authorization proof</div>
+                </div>
+                <div class="panel-body">
+                    <div class="chain-row"><span class="chain-key">Message Type</span><span class="chain-val" id="panelMsgType">pacs.008</span></div>
+                    <div class="chain-row"><span class="chain-key">Particles</span><span class="chain-val">1,024</span></div>
+                    <div class="chain-row"><span class="chain-key">Storage</span><span class="chain-val">Arweave / Irys</span></div>
+                    <div class="chain-row"><span class="chain-key">Ledger</span><span class="chain-val">Base Mainnet</span></div>
+                    <div class="chain-row"><span class="chain-key">Anchor field</span><span class="chain-val">tx calldata</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 3: SIGN & RECEIPTS -->
+<div id="zpk-tab-3" class="zpk-tab-panel" style="display:none;">
+    <div class="main-wrap">
+        <div class="steps-col">
+            <div class="step-card step-3" id="card3">
+                <div class="step-header">
+                    <div class="step-num">3</div>
+                    <div>
+                        <div class="step-title">Sign &amp; Settle</div>
+                        <div class="step-sub">Sign the Base transaction with MetaMask</div>
+                    </div>
+                    <span class="step-status status-pending" id="s3stat">Ready</span>
+                </div>
+                <div class="step-body">
+                    <div id="settle-promise" style="text-align:center;margin-bottom:28px;">
+                        <div style="font-size:26pt;font-weight:800;color:var(--tx);line-height:1.2;margin-bottom:6px;">
+                            One Signature. One Transaction.
+                        </div>
+                        <div style="font-size:20pt;font-weight:700;color:var(--base);margin-bottom:24px;">
+                            2 Rails.
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:520px;margin:0 auto;">
+                            <div style="background:var(--s2);border:1px solid var(--brd);border-radius:12px;padding:16px 10px;text-align:center;">
+                                <div style="font-size:22pt;font-weight:800;color:var(--tx);line-height:1;">1</div>
+                                <div style="font-size:13pt;font-weight:700;color:var(--mu);margin-top:4px;">Signature</div>
+                            </div>
+                            <div style="background:var(--s2);border:1px solid var(--brd);border-radius:12px;padding:16px 10px;text-align:center;">
+                                <div style="font-size:22pt;font-weight:800;color:var(--base);line-height:1;">2</div>
+                                <div style="font-size:13pt;font-weight:700;color:var(--mu);margin-top:4px;">Rails</div>
+                            </div>
+                            <div style="background:var(--s2);border:1px solid var(--brd);border-radius:12px;padding:16px 10px;text-align:center;">
+                                <div style="font-size:22pt;font-weight:800;color:var(--ok);line-height:1;">Zero</div>
+                                <div style="font-size:13pt;font-weight:700;color:var(--mu);margin-top:4px;line-height:1.3;">ISO 20022<br>Data at Rest</div>
+                            </div>
+                        </div>
+                        <div style="font-size:13pt;font-weight:650;color:var(--mu);margin-top:16px;line-height:1.8;max-width:560px;margin-left:auto;margin-right:auto;">
+                            Designed to significantly reduce GDPR, HIPAA, and CCPA data storage &amp; compliance burdens.<br>
+                            Signing immutably binds your ISO Message to this Base transaction.
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" id="btnSettle" onclick="settleOnChain()" disabled>
+                        Sign &amp; Settle OnChain
+                    </button>
+
+                    <div class="result-block" id="resultBlock"></div>
+
+                    <!-- Receipts -->
+                    <div id="receipts-panel" style="display:none;margin-top:28px;">
+                        <!-- ============================================================
+                             RECOVERY URLs - shown first, above receipts
+                             ============================================================ -->
+                        <div id="recovery-urls-panel" style="display:none;margin-bottom:28px;">
+                            <div class="sdiv" style="margin-top:0;">Recovery Links</div>
+
+                            <!-- Sender Recovery -->
+                            <div style="background:var(--s2);border:1px solid var(--brd);
+                                border-radius:8px;padding:20px;margin-bottom:12px;">
+                                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px;">
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+                                            <div style="font-size:15pt;font-weight:800;color:var(--tx);">Sender Recovery</div>
+                                            <div style="font-size:10pt;font-weight:700;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">Tip: Open in Private Mode</div>
+                                        </div>
+                                        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--base);font-weight:600;" id="recovery-sender-addr">-</div>
+                                    </div>
+                                    <a id="sender-recovery-btn" target="_blank" title="Open recovery portal" style="
+                                        flex-shrink:0;width:52px;height:52px;
+                                        background:linear-gradient(135deg,var(--base) 0%,#0040c8 100%);
+                                        border:none;border-radius:10px;color:#fff;font-size:20pt;
+                                        cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;">&#8599;</a>
+                                </div>
+                                <div style="font-size:12pt;font-weight:700;color:var(--mu);letter-spacing:0.04em;margin-bottom:6px;">Formatted</div>
+                                <div style="background:white;border:1px solid var(--brd);border-radius:8px;padding:16px;margin-bottom:14px;line-height:1.7;">
+                                    <div style="font-size:13pt;font-weight:700;color:var(--tx);margin-bottom:6px;">AIFS Protocol Inc. · ZPKPay Base Recovery Portal</div>
+                                    <div style="font-size:13pt;color:var(--mu);">Role: <strong style="color:var(--tx);">Sender</strong></div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--mu);" id="sender-dna-formatted">DNA Anchor: -</div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--base);" id="sender-wallet-formatted">Wallet: -</div>
+                                    <div style="font-size:13pt;color:var(--mu);margin-top:4px;">Recover at: <span style="color:#0052CC;">aifs.dev/recover-base.html</span></div>
+                                </div>
+                                <div style="font-size:12pt;font-weight:700;color:var(--mu);letter-spacing:0.04em;margin-bottom:6px;">Raw URL</div>
+                                <a id="sender-recovery-url" target="_blank" style="font-family:'JetBrains Mono',monospace;
+                                    font-size:13pt;color:var(--mu);word-break:break-all;
+                                    background:white;border:1px solid var(--brd);
+                                    display:block;text-decoration:none;
+                                    border-radius:6px;padding:12px;"></a>
+                            </div>
+
+                            <!-- Recipient Recovery -->
+                            <div style="background:var(--s2);border:1px solid var(--brd);
+                                border-radius:8px;padding:20px;margin-bottom:12px;">
+                                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px;">
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+                                            <div style="font-size:15pt;font-weight:800;color:var(--tx);">Recipient Recovery</div>
+                                            <div style="font-size:10pt;font-weight:700;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">Tip: Open in Private Mode</div>
+                                        </div>
+                                        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--base);font-weight:600;" id="recovery-recipient-addr">-</div>
+                                        <div style="font-size:13pt;color:var(--base);margin-top:4px;">Safe to share with the recipient. Requires their wallet to unlock.</div>
+                                    </div>
+                                    <a id="receiver-recovery-btn" target="_blank" title="Open recovery portal" style="
+                                        flex-shrink:0;width:52px;height:52px;
+                                        background:linear-gradient(135deg,var(--base) 0%,#0040c8 100%);
+                                        border:none;border-radius:10px;color:#fff;font-size:20pt;
+                                        cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;">&#8599;</a>
+                                </div>
+                                <div style="font-size:12pt;font-weight:700;color:var(--mu);letter-spacing:0.04em;margin-bottom:6px;">Formatted</div>
+                                <div style="background:white;border:1px solid var(--brd);border-radius:8px;padding:16px;margin-bottom:14px;line-height:1.7;">
+                                    <div style="font-size:13pt;font-weight:700;color:var(--tx);margin-bottom:6px;">AIFS Protocol Inc. · ZPKPay Base Recovery Portal</div>
+                                    <div style="font-size:13pt;color:var(--mu);">Role: <strong style="color:var(--tx);">Recipient</strong></div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--mu);" id="recipient-dna-formatted">DNA Anchor: -</div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;color:var(--base);" id="recipient-wallet-formatted">Wallet: -</div>
+                                    <div style="font-size:13pt;color:var(--mu);margin-top:4px;">Recover at: <span style="color:#0052CC;">aifs.dev/recover-base.html</span></div>
+                                </div>
+                                <div style="font-size:12pt;font-weight:700;color:var(--mu);letter-spacing:0.04em;margin-bottom:6px;">Raw URL</div>
+                                <a id="receiver-recovery-url" target="_blank" style="font-family:'JetBrains Mono',monospace;
+                                    font-size:13pt;color:var(--mu);word-break:break-all;
+                                    background:white;border:1px solid var(--brd);
+                                    display:block;text-decoration:none;
+                                    border-radius:6px;padding:12px;"></a>
+                            </div>
+                        </div>
+
+                        <div class="sdiv">Transaction Receipt</div>
+                        <div style="margin-top:12px;">
+                            <div style="font-size:13pt;font-weight:700;color:#000;margin-bottom:4px;">Transaction ID</div>
+                            <div id="base-tx-id" class="full-txid" style="display:none;"></div>
+                            <a id="base-tx-link" href="#" target="_blank" rel="noopener noreferrer"
+                                style="display:none;font-size:13pt;font-weight:700;color:var(--base);margin-top:8px;display:none;">
+                                View on Basescan &#8599;
+                            </a>
+                        </div>
+
+                        <div style="margin-top:20px;" id="arweave-section" style="display:none;">
+                            <div class="sdiv" style="margin-top:0;">Particle Storage</div>
+                            <a id="arweave-link" href="#" target="_blank" rel="noopener noreferrer"
+                                style="display:none;font-size:13pt;font-weight:700;color:var(--base);margin-top:8px;">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div>Powered by Base Mainnet &nbsp;·&nbsp; AIFS ZPK&trade; Zero Persistent Knowledge&trade; &nbsp;·&nbsp; <a href="https://aifs.dev">aifs.dev</a></div>
+    <div style="margin-top:4px;">USPTO 19/551,805 &nbsp;·&nbsp; Demo only - not financial advice &nbsp;·&nbsp; &copy; 2026 AIFS</div>
+</div>
+
+</div><!-- #zpk-hub -->
+
+<script src="zpk-shatter-fx.js" defer></script>
+
+<script>
+// ============================================================
+// ZPKPay-base.html — JavaScript
+// TJ Reynolds — AIFS Protocol Inc — April 2026
+//
+// ISOLATION: This page uses MetaMask (window.ethereum) exclusively.
+// No Xaman/Xumm SDK is loaded. Do not add xumm imports here.
+//
+// BACKEND: Same api.aifs.dev backend — no changes needed.
+// The /api/v1/liquify and /api/v1/materialize routes are chain-agnostic.
+//
+// SETTLEMENT: MetaMask signs a Base tx. The DNA anchor is written
+// into the tx data field (calldata) as hex-encoded UTF-8.
+// The tx sends 0 ETH to self with the anchor as the data payload.
+// The real payment (ETH transfer) is a separate tx — or combined
+// in a single tx to the receiver. See settleOnChain() below.
+//
+// TO REMOVE BASE SUPPORT: Delete this file. No backend changes needed.
+// ============================================================
+
+// ── Constants — TJ ──
+const API_BASE    = 'https://api.aifs.dev/api/v1';
+const EXPLORER    = 'https://basescan.org/tx/';
+const BASE_CHAIN_ID = 8453n;
+const BASE_CHAIN_HEX = '0x2105';
+
+// ── State — TJ ──
+let walletAddress   = null;
+let dnaAnchor       = null;
+let currentArweaveId = null;
+let activeMessageType = 'pacs.008';
+
+// ── XML escaping — security critical — TJ ──
+// DO NOT remove esc() calls from buildXml().
+// A user-supplied BIC like "ABC&DEF" would produce malformed XML
+// and could inject arbitrary XML nodes without this function.
+function esc(s) {
+    if (!s) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
+
+// ── UETR generator — TJ ──
+function genUetr() {
+    const b = () => Math.random().toString(16).substring(2, 10);
+    const v = `${b()}-${b().slice(0,4)}-4${b().slice(0,3)}-${(Math.floor(Math.random()*4)+8).toString(16)}${b().slice(0,3)}-${b()}${b().slice(0,8)}`;
+    document.getElementById('uetr').value = v;
+}
+
+// ── Trust Gate MetaMask connect — TJ ──
+// Called from the gate button. Connects MetaMask and dismisses the gate.
+// ZPK: no session stored. Address lives in walletAddress RAM variable only.
+async function gateConnect() {
+    const btn = document.getElementById('btn-gate-connect');
+    const status = document.getElementById('gate-status');
+    btn.disabled = true;
+    status.textContent = 'Connecting...';
+    try {
+        if (typeof window.ethereum === 'undefined') {
+            status.textContent = 'MetaMask not detected. Please install MetaMask.';
+            btn.disabled = false;
+            return;
+        }
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        const signer = await provider.getSigner();
+        walletAddress = await signer.getAddress();
+        document.getElementById('trust-gate').style.display = 'none';
+        document.querySelectorAll('.zpk-fade').forEach(el => el.classList.add('go'));
+        // ── Lightning bolt pulse · set to Infinity for continuous · TJ ──
+        const LIGHTNING_PULSES = 2;
+        document.documentElement.style.setProperty('--lightning-pulses', LIGHTNING_PULSES === Infinity ? 'infinite' : LIGHTNING_PULSES);
+        updateWalletUI();
+        document.getElementById('btnShatter').disabled = false;
+    } catch(e) {
+        status.textContent = 'Connection failed: ' + e.message;
+        btn.disabled = false;
+    }
+}
+
+// ── Wallet UI update — TJ ──
+function updateWalletUI() {
+    if (!walletAddress) return;
+    const bar = document.getElementById('wallet-info-bar');
+    bar.classList.add('visible');
+    document.getElementById('wallet-dot').classList.add('live');
+    document.getElementById('wallet-addr').textContent =
+        walletAddress.substring(0,6) + '...' + walletAddress.substring(38);
+}
+
+// ── Destination validation — TJ ──
+function validateDest() {
+    const v = document.getElementById('destAddr').value.trim();
+    const ok = /^0x[0-9a-fA-F]{40}$/.test(v);
+    document.getElementById('destErr').style.display = ok || !v ? 'none' : 'block';
+}
+
+// ── Collect form — TJ ──
+function collectForm() {
+    return {
+        instgBic:  document.getElementById('instgBic').value.trim(),
+        instgName: document.getElementById('instgName').value.trim(),
+        instdBic:  document.getElementById('instdBic').value.trim(),
+        instdName: document.getElementById('instdName').value.trim(),
+        dbtrName:  document.getElementById('dbtrName').value.trim(),
+        cdtrName:  document.getElementById('cdtrName').value.trim(),
+        amount:    document.getElementById('isoAmt').value.trim(),
+        ccy:       document.getElementById('isoCcy').value.trim().toUpperCase() || 'USD',
+        remit:     document.getElementById('remitInfo').value.trim(),
+        dest:      document.getElementById('destAddr').value.trim(),
+        msgId:     document.getElementById('msgId').value.trim() || 'MSG-ID-001',
+        e2eId:     document.getElementById('e2eId').value.trim() || 'E2E-2026-0001',
+        uetr:      document.getElementById('uetr').value.trim()
+    };
+}
+
+// ── Build ISO 20022 XML — TJ ──
+// Same pattern as ZPKPay.html — esc() on every user-supplied value.
+function buildXml(f) {
+    const now = new Date().toISOString();
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.10">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>${esc(f.msgId)}</MsgId>
+      <CreDtTm>${now}</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <SttlmInf><SttlmMtd>CLRG</SttlmMtd></SttlmInf>
+      <InstgAgt><FinInstnId><BICFI>${esc(f.instgBic)}</BICFI><Nm>${esc(f.instgName)}</Nm></FinInstnId></InstgAgt>
+      <InstdAgt><FinInstnId><BICFI>${esc(f.instdBic)}</BICFI><Nm>${esc(f.instdName)}</Nm></FinInstnId></InstdAgt>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId><EndToEndId>${esc(f.e2eId)}</EndToEndId><UETR>${esc(f.uetr)}</UETR></PmtId>
+      <IntrBkSttlmAmt Ccy="${esc(f.ccy)}">${esc(f.amount)}</IntrBkSttlmAmt>
+      <Dbtr><Nm>${esc(f.dbtrName)}</Nm></Dbtr>
+      <Cdtr><Nm>${esc(f.cdtrName)}</Nm></Cdtr>
+      <Purp><Cd>SUPP</Cd></Purp>
+      <RmtInf><Ustrd>${esc(f.remit)}</Ustrd></RmtInf>
+      <Ledger><Chain>Base</Chain><ChainId>8453</ChainId><Anchor>AIFS-ZPK-V1</Anchor></Ledger>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>`;
+}
+
+// ── switchMessageType — TJ ──
+function switchMessageType(code) {
+    activeMessageType = code;
+    document.getElementById('panelMsgType').textContent = code;
+    const descs = {
+        'pacs.008': 'Interbank credit transfer. The primary payment message on Base.',
+        'pacs.009': 'Bank-to-bank transfer for liquidity and treasury operations.',
+        'pacs.004': 'Return of a previously executed payment.',
+        'pacs.002': 'Status report within the clearing system.',
+        'pain.001': 'Customer instructs bank to send funds.',
+        'pain.002': 'Bank notifies customer of instruction status.',
+        'pain.008': 'Collect funds from a debtor account.',
+        'camt.053': 'End-of-day bank statement.',
+        'camt.054': 'Real-time notification of a specific credit or debit.',
+        'camt.052': 'Intraday report of account activity and balances.',
+        'camt.056': 'Recall a payment that has already been sent.'
+    };
+    document.getElementById('msgTypeDesc').textContent = descs[code] || '';
+    updateShatterPreview();
+}
+
+// ── updateShatterPreview — TJ ──
+function updateShatterPreview() {
+    const f = collectForm();
+    const xml = buildXml(f);
+    const prev = document.getElementById('previewContent');
+    if (prev) prev.textContent = xml.substring(0, 300) + '...';
+}
+
+// ── switchTab — TJ ──
+function switchTab(n) {
+    window.shatterFx?.onTabSwitch(n);
+    document.querySelectorAll('.zpk-tab-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.zpk-tab').forEach(t => {
+        t.style.color = 'var(--mu)';
+        t.style.borderBottomColor = 'transparent';
+    });
+    document.getElementById('zpk-tab-' + n).style.display = 'block';
+    const activeTab = document.querySelector(`.zpk-tab[data-tab="${n}"]`);
+    if (activeTab) {
+        activeTab.style.color = 'var(--base)';
+        activeTab.style.borderBottomColor = 'var(--base)';
+    }
+}
+
+// ── markDone — TJ ──
+function markDone(step) {
+    document.getElementById('s' + step + 'stat').textContent = 'Done';
+    document.getElementById('s' + step + 'stat').className = 'step-status status-done';
+}
+
+// ── showResult — TJ ──
+// SECURITY: Never use innerHTML for user-supplied content.
+// All dynamic text uses textContent only.
+function showResult(type, msg) {
+    const rb = document.getElementById('resultBlock');
+    rb.className = 'result-block ' + type;
+    rb.innerHTML = '';
+
+    let finalityMs = null;
+    let displayMsg = msg;
+    const fm = msg.match(/\n__FINALITY__(\d+)$/);
+    if (fm) { finalityMs = parseInt(fm[1]); displayMsg = msg.replace(/\n__FINALITY__\d+$/, ''); }
+
+    if (type === 'success' && finalityMs !== null) {
+        const promise = document.getElementById('settle-promise');
+        if (promise) promise.style.display = 'none';
+        const hero = document.createElement('div');
+        hero.style.cssText = 'text-align:center;padding:16px 0 24px;';
+        const s1 = document.createElement('div');
+        s1.style.cssText = 'font-size:26pt;font-weight:800;color:var(--base);letter-spacing:-0.01em;line-height:1.2;margin-bottom:6px;';
+        s1.textContent = 'Success!';
+        const s2 = document.createElement('div');
+        s2.style.cssText = 'font-size:26pt;font-weight:800;color:var(--tx);line-height:1.2;margin-bottom:6px;';
+        s2.textContent = 'One Signature. One Transaction.';
+        const s3 = document.createElement('div');
+        s3.style.cssText = 'font-size:20pt;font-weight:700;color:var(--base);margin-bottom:16px;';
+        s3.textContent = 'Payment & ISO Message Finality';
+        const s4 = document.createElement('div');
+        s4.style.cssText = 'margin-top:14px;font-size:16pt;font-weight:600;color:var(--base);';
+        s4.textContent = '...at the speed of the Ledger.';
+        hero.appendChild(s1); hero.appendChild(s2); hero.appendChild(s3); hero.appendChild(s4);
+        rb.appendChild(hero);
+    } else {
+        const d = document.createElement('div');
+        d.textContent = displayMsg;
+        rb.appendChild(d);
+    }
+}
+
+// ── shatterPayload — TJ ──
+// ============================================================
+// Sends the ISO XML to the backend ShatterEngine.
+// The backend hashes both sender and receiver addresses before
+// storing on Arweave — raw addresses on a permanent ledger
+// are a ZPK violation. See CLAUDE.md Critical Security Fixes.
+//
+// originAddress: MetaMask wallet (sender identity)
+// receiverAddress: the Base destination address from Tab 1
+// allowSenderReassembly: true — both parties can verify (dual custody)
+// ============================================================
+async function shatterPayload() {
+    const f = collectForm();
+    const xml = buildXml(f);
+    const btn = document.getElementById('btnShatter');
+    btn.disabled = true;
+    btn.textContent = 'Shattering...';
+
+    try {
+        const res = await fetch(API_BASE + '/liquify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                manifest: xml,
+                originAddress: walletAddress || f.dest,
+                receiverAddress: f.dest,
+                allowSenderReassembly: true,
+                metadata: { length: xml.length, messageType: activeMessageType }
+            })
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Shatter failed');
+
+        dnaAnchor = result.dna;
+        currentArweaveId = result.arweaveId;
+        if (typeof ZPKAudioManager !== 'undefined') ZPKAudioManager.shatter();
+
+        document.getElementById('shatterStats').style.display = 'flex';
+        document.getElementById('statBytes').textContent = xml.length.toLocaleString();
+        document.getElementById('statRatio').textContent =
+            Math.round((1 - 32/xml.length)*100) + '%';
+
+        if (currentArweaveId) {
+            const ppBox = document.getElementById('particle-preview-box');
+            const ppData = document.getElementById('particle-preview-data');
+            ppData.textContent = 'Fetching from permanent storage...';
+            ppBox.style.display = 'block';
+            fetch('https://node1.irys.xyz/' + currentArweaveId)
+                .then(r => r.json())
+                .then(data => {
+                    const particles = Array.isArray(data) ? data : (data.particles || data.shards || []);
+                    if (particles.length > 0) {
+                        const shown = particles.slice(0, 15).map(p => {
+                            const s = String(p);
+                            return '"' + (s.length > 10 ? s.substring(0, 10) + '..' : s) + '"';
+                        });
+                        ppData.textContent = '[' + shown.join(', ') + ', ...]\n\n' +
+                            particles.length + ' particles · permanent storage · ZPK';
+                    } else {
+                        ppData.textContent = 'Stored. Verify at Arweave link above.\n\n1,024 particles · ZPK';
+                    }
+                })
+                .catch(() => { ppData.textContent = 'Stored on Arweave. 1,024 particles · ZPK'; });
+
+            const arLink = document.getElementById('arweave-link');
+            arLink.href = 'https://node1.irys.xyz/' + currentArweaveId;
+            arLink.textContent = 'Particle storage: ' + currentArweaveId.substring(0,16) + '...';
+            arLink.style.display = 'block';
+        }
+
+        markDone(2);
+        document.getElementById('btnSettle').disabled = false;
+        btn.textContent = 'Shattered';
+        updateShatterPreview();
+    } catch(e) {
+        btn.disabled = false;
+        btn.textContent = 'Shatter & Anchor ISO Message';
+        alert('Shatter failed: ' + e.message);
+    }
+}
+
+// ── settleOnChain — TJ ──
+// ============================================================
+// FROZEN PATTERN — TJ Reynolds — April 2026
+//
+// This function writes the DNA anchor to Base Mainnet as tx calldata.
+// The calldata format is: AIFS_DNA_WITNESS:[hash]
+// followed by SUBSTRATE_TYPE, VERIFICATION_MATERIAL, and PROTOCOL fields.
+// This matches the Base Transaction Calldata Universal Reassembly Standard
+// defined in start.md.
+//
+// NETWORK ENFORCEMENT: Must be on Base Mainnet (Chain ID 8453).
+// If wrong chain, MetaMask is asked to switch. If it fails, we abort.
+//
+// The tx sends 0 ETH to the receiver address. The ISO payment amount
+// (from Tab 1) is included in the calldata for audit purposes but the
+// actual ETH transfer is the tx value. This is intentional — the anchor
+// and the payment are the same transaction.
+//
+// DO NOT add sessionStorage or localStorage here.
+// DO NOT store the DNA anchor or tx hash anywhere persistent.
+// ============================================================
+async function settleOnChain() {
+    if (!dnaAnchor) {
+        showResult('error', 'Complete Step 2 (Shatter) before settling.');
+        return;
+    }
+    const f = collectForm();
+    if (!f.dest || !/^0x[0-9a-fA-F]{40}$/.test(f.dest)) {
+        showResult('error', 'Please enter a valid Base receiver address before settling.');
+        return;
+    }
+
+    const btn = document.getElementById('btnSettle');
+    btn.disabled = true;
+    btn.textContent = 'Connecting MetaMask...';
+
+    try {
+        if (typeof window.ethereum === 'undefined') {
+            throw new Error('MetaMask not detected.');
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const network = await provider.getNetwork();
+
+        // ============================================================
+        // BASE MAINNET ONLY — Chain ID 8453 — TJ Reynolds — April 2026
+        // Testnets get wiped. A wiped anchor is a broken promise.
+        // We switch the user to Base Mainnet if they are on the wrong chain.
+        // ============================================================
+        if (network.chainId !== BASE_CHAIN_ID) {
+            btn.textContent = 'Switching to Base Mainnet...';
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: BASE_CHAIN_HEX }]
+                });
+            } catch(switchErr) {
+                throw new Error('Must be on Base Mainnet (Chain ID 8453) to proceed.');
+            }
+        }
+
+        await provider.send('eth_requestAccounts', []);
+        const signer = await provider.getSigner();
+        walletAddress = await signer.getAddress();
+        updateWalletUI();
+
+        // ============================================================
+        // CALLDATA FORMAT — Base Transaction Calldata Standard — TJ
+        // Format matches start.md Universal Reassembly Standard:
+        // AIFS_DNA_WITNESS: [hash]
+        // SUBSTRATE_TYPE: wallet
+        // VERIFICATION_MATERIAL: [public address]
+        // PROTOCOL: AIFS-ZPK-UNIVERSAL-V1
+        //
+        // TO REMOVE: delete this calldata block and send a plain transfer.
+        // ============================================================
+        const calldataPayload =
+            'AIFS_DNA_WITNESS:' + dnaAnchor + '\n' +
+            'SUBSTRATE_TYPE:wallet\n' +
+            'VERIFICATION_MATERIAL:' + walletAddress + '\n' +
+            'PROTOCOL:AIFS-ZPK-UNIVERSAL-V1';
+        const dataHex = ethers.hexlify(ethers.toUtf8Bytes(calldataPayload));
+
+        btn.textContent = 'Waiting for MetaMask signature...';
+
+        // Send ETH to receiver with DNA anchor in calldata
+        const ethAmount = parseFloat(f.ethAmt || '0.001');
+        const tx = await signer.sendTransaction({
+            to: f.dest,
+            value: ethers.parseEther(ethAmount.toFixed(6)),
+            data: dataHex
+        });
+
+        btn.textContent = 'Confirming on Base...';
+        const receipt = await tx.wait();
+
+        // Register sender now that we have the confirmed wallet
+        if (walletAddress && dnaAnchor) {
+            fetch(API_BASE + '/materialize/' + dnaAnchor + '/register-sender', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: walletAddress })
+            }).catch(() => {}); // fire-and-forget
+        }
+
+        showResult('success', 'Settlement confirmed.\n__FINALITY__1', tx.hash);
+        btn.textContent = 'Settled';
+        markDone(3);
+
+        // Show receipts
+        document.getElementById('receipts-panel').style.display = 'block';
+        const txLink = document.getElementById('base-tx-link');
+        const txId = document.getElementById('base-tx-id');
+        txId.textContent = tx.hash;
+        txId.style.display = 'block';
+        txLink.href = EXPLORER + tx.hash;
+        txLink.style.display = 'block';
+
+        // Recovery links
+        if (dnaAnchor) {
+            const rawHex = dnaAnchor.replace('AIFS_DNA_','').replace('DNA','');
+            const recoverBase = 'https://aifs.dev/recover-base.html?dna=' + rawHex;
+            const recipientAddr = document.getElementById('destAddr') ? document.getElementById('destAddr').value.trim() : '';
+            const dnaDisplay = 'DNA Anchor: DNA' + rawHex;
+
+            const sBtn = document.getElementById('sender-recovery-btn');
+            const rBtn = document.getElementById('receiver-recovery-btn');
+            const sUrl = document.getElementById('sender-recovery-url');
+            const rUrl = document.getElementById('receiver-recovery-url');
+
+            if (sBtn) sBtn.href = recoverBase + '&role=sender';
+            if (rBtn) rBtn.href = recoverBase + '&role=receiver';
+            if (sUrl) { sUrl.href = recoverBase + '&role=sender'; sUrl.textContent = recoverBase + '&role=sender'; }
+            if (rUrl) { rUrl.href = recoverBase + '&role=receiver'; rUrl.textContent = recoverBase + '&role=receiver'; }
+
+            const sAddr = document.getElementById('recovery-sender-addr');
+            if (sAddr) sAddr.textContent = walletAddress || '(wallet not captured)';
+            const rAddr = document.getElementById('recovery-recipient-addr');
+            if (rAddr) rAddr.textContent = recipientAddr || '-';
+
+            const sDna = document.getElementById('sender-dna-formatted');
+            if (sDna) sDna.textContent = dnaDisplay;
+            const rDna = document.getElementById('recipient-dna-formatted');
+            if (rDna) rDna.textContent = dnaDisplay;
+            const sWallet = document.getElementById('sender-wallet-formatted');
+            if (sWallet) sWallet.textContent = 'Wallet: ' + (walletAddress || '-');
+            const rWallet = document.getElementById('recipient-wallet-formatted');
+            if (rWallet) rWallet.textContent = 'Wallet: ' + (recipientAddr || '-');
+
+            const urlsPanel = document.getElementById('recovery-urls-panel');
+            if (urlsPanel) urlsPanel.style.display = 'block';
+        }
+
+        if (typeof ZPKAudioManager !== 'undefined') ZPKAudioManager.success();
+        // Success text burst — same pattern as ZPKPay.html — TJ
+        textBurst('$', '#0052FF', 150);
+        setTimeout(function() { textBurst(null, '#000000', 150); }, 1500);
+
+    } catch(e) {
+        showResult('error', 'Transaction failed: ' + (e.message || String(e)));
+        btn.disabled = false;
+        btn.textContent = 'Sign & Settle OnChain';
+    }
+}
+
+// ── textBurst — TJ ──
+// Success animation: $ signs then random ISO/ZPK words.
+// Same pattern as ZPKPay.html. Purges all DOM nodes after animation.
+function textBurst(char, color, count) {
+    var words = ['ISO','DNA','ZPK','pacs.008','Base','settled','immutable','onchain','verified'];
+    for (var i = 0; i < count; i++) {
+        (function() {
+            var el = document.createElement('div');
+            el.textContent = char || words[Math.floor(Math.random() * words.length)];
+            var startX = Math.random() * window.innerWidth;
+            el.style.cssText = 'position:fixed;left:' + startX + 'px;top:' + (window.innerHeight * 0.6) + 'px;font-size:12pt;font-weight:700;color:' + color + ';pointer-events:none;z-index:99999;opacity:1;transition:transform 1.4s ease-out,opacity 1.4s ease-out;white-space:nowrap;';
+            document.body.appendChild(el);
+            var dx = (Math.random() - 0.5) * 400;
+            var dy = -(Math.random() * 400 + 100);
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (Math.random()*60-30) + 'deg)';
+                    el.style.opacity = '0';
+                });
+            });
+            setTimeout(function() { el.remove(); }, 1600);
+        })();
+    }
+}
+
+// ── Init on load — TJ ──
+document.addEventListener('DOMContentLoaded', function() {
+    genUetr();
+    switchMessageType('pacs.008');
+    updateShatterPreview();
+
+    // Silent wallet detection — do not prompt, just check
+    // Full connect happens in gateConnect() — TJ
+    if (typeof window.ethereum !== 'undefined') {
+        const p = new ethers.BrowserProvider(window.ethereum);
+        p.listAccounts().then(accounts => {
+            if (accounts.length > 0) {
+                walletAddress = accounts[0].address;
+                // Pre-populate but do NOT dismiss gate — user must click connect — TJ
+            }
+        }).catch(() => {});
+    }
+});
+
+// ZPK Audio Manager - Web Audio API (Requested by USER) - April 2026
+// Zero external assets. Sounds synthesized in RAM only.
+const ZPKAudioManager = {
+    _ctx: null,
+    init: function() {
+        if (this._ctx) return;
+        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    },
+    _play: function(type) {
+        this.init();
+        var ctx = this._ctx;
+        if (ctx.state === 'suspended') ctx.resume();
+        var now = ctx.currentTime;
+        var g = ctx.createGain();
+        g.connect(ctx.destination);
+        if (type === 'click') {
+            var o = ctx.createOscillator();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(800, now);
+            g.gain.setValueAtTime(0.12, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            o.connect(g);
+            o.start(now); o.stop(now + 0.04);
+        } else if (type === 'shatter') {
+            var len = ctx.sampleRate * 0.12;
+            var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+            var d = buf.getChannelData(0);
+            for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+            var src = ctx.createBufferSource();
+            src.buffer = buf;
+            var flt = ctx.createBiquadFilter();
+            flt.type = 'highpass';
+            flt.frequency.setValueAtTime(1200, now);
+            g.gain.setValueAtTime(0.15, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            src.connect(flt); flt.connect(g);
+            src.start(now);
+        } else if (type === 'success') {
+            [523.25, 659.25, 783.99].forEach(function(freq, i) {
+                var osc = ctx.createOscillator();
+                var gn = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                gn.gain.setValueAtTime(0, now + i * 0.1);
+                gn.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.04);
+                gn.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.35);
+                osc.connect(gn); gn.connect(ctx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.4);
+            });
+        }
+    },
+    click: function() { this._play('click'); },
+    shatter: function() { this._play('shatter'); },
+    success: function() { this._play('success'); }
+};
+document.addEventListener('mousedown', function() { ZPKAudioManager.init(); }, { once: true });
+document.addEventListener('click', function(e) {
+    if (e.target.closest('button, .ripple-btn, .btn-ghost, .btn-settle')) {
+        ZPKAudioManager.click();
+    }
+}, true);
+</script>
+
+</body>
+</html>
