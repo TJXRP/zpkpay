@@ -39,14 +39,31 @@ function log(label, value, cls) {
     const out = document.getElementById('output');
     const div = document.createElement('div');
     div.className = 'result ' + (cls || '');
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+
     const strong = document.createElement('strong');
     strong.textContent = label;
+
+    const btn = document.createElement('button');
+    btn.textContent = 'copy';
+    btn.style.cssText = 'padding:4px 12px;font-size:12px;margin:0;background:#374151;border-radius:4px;';
+    btn.onclick = () => {
+        navigator.clipboard.writeText(value).then(() => {
+            btn.textContent = 'copied!';
+            setTimeout(() => btn.textContent = 'copy', 2000);
+        });
+    };
+
+    header.appendChild(strong);
+    header.appendChild(btn);
+
     const pre = document.createElement('pre');
-    pre.style.margin = '8px 0 0';
-    pre.style.whiteSpace = 'pre-wrap';
-    pre.style.wordBreak = 'break-all';
+    pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-all;';
     pre.textContent = value;
-    div.appendChild(strong);
+
+    div.appendChild(header);
     div.appendChild(pre);
     out.appendChild(div);
 }
