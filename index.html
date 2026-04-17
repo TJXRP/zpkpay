@@ -145,9 +145,49 @@ body {
 /* ── Hero ── */
 .zpk-hero {
     background: var(--zpk-cream);
-    padding: 80px 40px 72px 150px;
+    padding: 80px 60px 72px 150px;
     text-align: left;
 }
+.hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}
+.hero-left {
+    flex: 1;
+    min-width: 0;
+}
+.hero-right {
+    flex: 0 0 480px;
+    width: 480px;
+}
+.hero-video-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background: var(--zpk-navy);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.hero-video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+.hero-video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.35);
+    font-size: 15px;
+    gap: 12px;
+}
+.hero-video-placeholder i { font-size: 52px; color: var(--zpk-orange); opacity: 0.6; }
 .hero-eyebrow {
     font-size: 15px;
     font-weight: 600;
@@ -184,17 +224,14 @@ body {
 }
 
 /* ── Mobile first ── */
+@media (max-width: 1024px) {
+    .hero-inner { flex-direction: column; }
+    .hero-right { flex: none; width: 100%; }
+}
 @media (max-width: 768px) {
-    .zpk-hero {
-        padding: 48px 24px 56px 24px;
-    }
-    .hero-timeline {
-        font-size: 15px;
-        white-space: normal;
-    }
-    .hero-closing {
-        font-size: 18px;
-    }
+    .zpk-hero { padding: 48px 24px 56px 24px; }
+    .hero-timeline { font-size: 15px; white-space: normal; }
+    .hero-closing { font-size: 18px; }
 }
 .btn-zpk-primary {
     background: var(--zpk-navy);
@@ -421,29 +458,30 @@ body {
 
 <!-- Hero -->
 <section class="zpk-hero">
-    <p class="hero-eyebrow">The Evolution of Computer Security</p>
-    <h1 class="hero-title">From Barriers to Armor to Privacy...<br>to Entropic Dispersal and Reassembly</h1>
-    <div class="hero-timeline">
-        <span class="era">Passwords (70s-80s)</span>
-        <span class="arrow">&rarr;</span>
-        <span class="era">Antivirus (90s-00s)</span>
-        <span class="arrow">&rarr;</span>
-        <span class="era">E2EE (00s-20s)</span>
-        <span class="arrow">&rarr;</span>
-        <span class="era era-final">Zero Persistent Knowledge ZPK&trade; (2026 &rarr;)</span>
-    </div>
-    <p class="hero-closing">ZPK is an open protocol SDK for payment privacy. The engine remains ours.</p>
-</section>
-
-<!-- Video -->
-<section class="zpk-video-section">
-    <h2>See it work.</h2>
-    <div class="video-wrapper" id="video-container">
-        <!-- Paste your YouTube URL and replace VIDEO_ID below -->
-        <!-- <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
-        <div class="video-placeholder">
-            <i class="bi bi-play-circle"></i>
-            <span>Demo video coming soon</span>
+    <div class="hero-inner">
+        <div class="hero-left">
+            <p class="hero-eyebrow">The Evolution of Computer Security</p>
+            <h1 class="hero-title">From Barriers to Armor to Privacy...<br>to Entropic Dispersal and Reassembly</h1>
+            <div class="hero-timeline">
+                <span class="era">Passwords (70s-80s)</span>
+                <span class="arrow">&rarr;</span>
+                <span class="era">Antivirus (90s-00s)</span>
+                <span class="arrow">&rarr;</span>
+                <span class="era">E2EE (00s-20s)</span>
+                <span class="arrow">&rarr;</span>
+                <span class="era era-final">Zero Persistent Knowledge ZPK&trade; (2026 &rarr;)</span>
+            </div>
+            <p class="hero-closing">ZPK is an open protocol SDK for payment privacy. The engine remains ours.</p>
+        </div>
+        <div class="hero-right">
+            <!-- To embed: replace the placeholder div with the iframe below -->
+            <!-- <iframe class="hero-video-wrap" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
+            <div class="hero-video-wrap">
+                <div class="hero-video-placeholder">
+                    <i class="bi bi-play-circle"></i>
+                    <span>Demo video coming soon</span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
