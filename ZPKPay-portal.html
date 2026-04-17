@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+    ============================================================
+    ZPKPay-portal.html · AIFS ZPKPay Institutional Portal
+    TJ Reynolds · AIFS Protocol Inc · April 2026
+
+    AUDIENCE: Business / institutional users. Bank tellers,
+    compliance officers, treasury staff. No technical jargon.
+    One flow. One action. One receipt.
+
+    NETWORK: Xahau · Network ID 21337
+    WALLET:  Xaman · xumm-oauth2-pkce@2.8.7
+    BACKEND: api.aifs.dev · same engine as ZPKPay-xahau.html
+
+    RULES:
+    - No new .md files without TJ authorization
+    - No new .html files without TJ authorization
+    - Nothing written to C: drive
+    - No em dashes
+    - No placeholder code
+    ============================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:;">
+<title>ZPKPay · Simultaneous Payment Portal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23fdf4f0'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='18' font-weight='900' text-anchor='middle' fill='%231a1f36'>Z</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xumm-oauth2-pkce@2.8.7/dist/browser.min.js"></script>
+
+<style>
+:root {
+    --bg: #f0f2f5;
+    --sur: #ffffff;
+    --brd: rgba(0,0,0,.12);
+    --tx: #111827;
+    --mu: #6b7280;
+    --di: #9ca3af;
+    --orange: #e8960c;
+    --orange-dk: #c97d08;
+    --orange-lt: rgba(232,150,12,.10);
+    --navy: #1a1f36;
+    --navy-dk: #0f1220;
+    --green: #16a34a;
+    --green-lt: #f0fdf4;
+    --red: #dc2626;
+    --blue: #1a56db;
+    --blue-lt: rgba(26,86,219,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    color: var(--tx);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Top bar ── */
+.topbar {
+    background: #fdf4f0;
+    border-bottom: 1px solid rgba(0,0,0,.10);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.bank-logo {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+    font-size: 22pt;
+    font-weight: 650;
+}
+.bank-name {
+    font-size: 15pt;
+    font-weight: 700;
+    color: var(--tx);
+}
+.bank-sub {
+    font-size: 11pt;
+    color: var(--mu);
+    margin-left: 2px;
+}
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 12pt;
+    color: var(--mu);
+}
+.topbar-date {
+    font-size: 12pt;
+    color: var(--mu);
+}
+.wallet-pill {
+    background: var(--orange-lt);
+    color: var(--orange-dk);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12pt;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid rgba(232,150,12,.25);
+    transition: background 0.2s;
+}
+.wallet-pill:hover { background: rgba(232,150,12,.18); }
+
+/* ── Main layout ── */
+.main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px 60px;
+}
+.card {
+    background: var(--sur);
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.10);
+    width: 80%;
+    max-width: 960px;
+    overflow: hidden;
+}
+
+/* ── Card header ── */
+.card-header {
+    background: var(--sur);
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--brd);
+}
+.card-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.card-title {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--mu);
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+.card-heading {
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--tx);
+    letter-spacing: 0.01em;
+}
+.zpk-badge {
+    background: var(--orange-lt);
+    border: 1px solid rgba(232,150,12,.25);
+    color: var(--orange-dk);
+    font-size: 11pt;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+}
+
+/* ── Progress steps ── */
+.steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+.step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12pt;
+    font-weight: 700;
+    background: #e5e7eb;
+    color: var(--mu);
+    flex-shrink: 0;
+    transition: background 0.3s;
+    border: 2px solid #e5e7eb;
+}
+.step-num.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+.step-num.done { background: var(--green); color: #fff; border-color: var(--green); }
+.step-label {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--di);
+    white-space: nowrap;
+}
+.step-label.active { color: var(--tx); }
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 8px;
+    border-top: 2px dashed #d1d5db;
+    height: 0;
+}
+.step-connector.done { border-color: var(--green); }
+
+/* ── Card body ── */
+.card-body {
+    padding: 36px 40px;
+}
+
+/* ── Section label ── */
+.section-label {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--mu);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--brd);
+}
+
+/* ── Form grid ── */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.field-label {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--mu);
+}
+.field-input {
+    border: 1.5px solid var(--brd);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13pt;
+    font-family: 'Inter', sans-serif;
+    color: var(--tx);
+    background: var(--sur);
+    transition: border-color 0.2s;
+    width: 100%;
+}
+.field-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+}
+.field-input::placeholder { color: var(--di); }
+select.field-input { cursor: pointer; }
+
+/* ── Payment destination ── */
+.dest-box {
+    background: #f8fafc;
+    border: 1.5px solid var(--brd);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+.dest-label {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--mu);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+}
+.dest-value {
+    font-size: 13pt;
+    font-weight: 500;
+    color: var(--tx);
+    font-family: 'JetBrains Mono', monospace;
+}
+.dest-sub {
+    font-size: 11pt;
+    color: var(--di);
+    margin-top: 4px;
+}
+
+/* ── Confirm button ── */
+.btn-settle {
+    width: 100%;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 18px;
+    font-size: 15pt;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s, transform 0.1s;
+    margin-bottom: 6px;
+}
+.btn-settle:hover:not(:disabled) { background: var(--navy-dk); transform: translateY(-1px); }
+.btn-settle:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-settle-sub {
+    text-align: center;
+    font-size: 11pt;
+    color: var(--mu);
+    margin-bottom: 16px;
+}
+
+.btn-secondary {
+    width: 100%;
+    background: transparent;
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 13pt;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-secondary:hover { background: var(--blue-lt); }
+
+/* ── Live status ── */
+.live-status {
+    border-top: 1px solid var(--brd);
+    padding: 16px 24px;
+    background: #f8fafc;
+    display: flex;
+    gap: 12px;
+}
+.status-rail {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--brd);
+    transition: border-color 0.4s, background 0.4s;
+    position: relative;
+}
+.status-rail.rail-active {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+.status-rail.rail-pending {
+    background: #fffbf0;
+    border-color: rgba(232,150,12,.3);
+}
+.status-rail.rail-failed {
+    background: #fff1f1;
+    border-color: #fecaca;
+}
+.status-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18pt;
+    flex-shrink: 0;
+    background: var(--orange-lt);
+    color: var(--orange);
+    transition: all 0.4s;
+}
+.status-icon-wrap.iso  { background: var(--orange-lt); color: var(--orange); }
+.status-icon-wrap.xah  { background: rgba(26,86,219,.08); color: var(--blue); }
+.status-icon-wrap.active { background: #dcfce7; color: var(--green); }
+.status-check {
+    margin-left: auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: #e5e7eb;
+    color: #9ca3af;
+    transition: all 0.4s;
+}
+.status-check.active { background: var(--green); color: #fff; }
+.status-info { flex: 1; min-width: 0; }
+.status-title {
+    font-size: 11pt;
+    font-weight: 800;
+    color: var(--tx);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.status-detail {
+    font-size: 11pt;
+    color: var(--mu);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Receipt view ── */
+.receipt {
+    display: none;
+    padding: 36px 40px;
+}
+.receipt-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.receipt-check {
+    width: 64px;
+    height: 64px;
+    background: var(--green-lt);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28pt;
+    margin: 0 auto 16px;
+    color: var(--green);
+}
+.receipt-title {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--green);
+    margin-bottom: 4px;
+}
+.receipt-sub {
+    font-size: 13pt;
+    color: var(--mu);
+}
+.receipt-rows {
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid var(--brd);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.receipt-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--brd);
+    font-size: 13pt;
+}
+.receipt-row:last-child { border-bottom: none; }
+.receipt-row-key { color: var(--mu); font-weight: 500; }
+.receipt-row-val { font-weight: 700; color: var(--tx); font-family: 'JetBrains Mono', monospace; font-size: 12pt; }
+.receipt-row-val.green { color: var(--green); }
+
+.btn-recover {
+    width: 100%;
+    background: transparent;
+    color: var(--navy);
+    border: 1.5px solid var(--navy);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 14pt;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+.btn-recover:hover { background: rgba(26,31,54,.06); }
+.btn-recover-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--navy);
+    font-size: 12pt;
+    font-weight: 700;
+    cursor: default;
+    flex-shrink: 0;
+}
+.btn-recover-tip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: #fff;
+    font-size: 11pt;
+    font-weight: 400;
+    padding: 10px 14px;
+    border-radius: 8px;
+    white-space: normal;
+    width: 280px;
+    line-height: 1.5;
+    z-index: 200;
+    text-align: center;
+}
+.btn-new {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 14pt;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 12px;
+}
+.btn-new:hover { background: var(--blue-dk); }
+
+/* ── Wallet modal ── */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 420px;
+    width: 92%;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+}
+.modal-title {
+    font-size: 18pt;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--tx);
+}
+.modal-sub {
+    font-size: 13pt;
+    color: var(--mu);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+.qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+#portal-qr { width: 200px; height: 200px; }
+.modal-status {
+    font-size: 13pt;
+    color: var(--mu);
+    margin-bottom: 16px;
+}
+.btn-modal-cancel {
+    background: transparent;
+    border: 1.5px solid var(--brd);
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 13pt;
+    color: var(--mu);
+    cursor: pointer;
+}
+
+/* ── Footer ── */
+.footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11pt;
+    color: var(--di);
+    border-top: 1px solid var(--brd);
+    background: var(--sur);
+}
+
+/* ── Spinner ── */
+.spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error ── */
+.err-msg {
+    font-size: 11pt;
+    color: var(--red);
+    margin-top: 4px;
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="bank-logo"><i class="bi bi-globe"></i></div>
+        <div>
+            <div class="bank-name">Global Settlement Terminal</div>
+            <div class="bank-sub">Treasury &amp; Payments</div>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <span class="topbar-date" id="portal-date"></span>
+        <span class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Connect Wallet</span>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+    <div class="card">
+
+        <!-- Card header -->
+        <div class="card-header">
+            <div class="card-header-top">
+                <div>
+                    <div class="card-title">Simultaneous Payment</div>
+                    <div class="card-heading">Initiate Dual Rails: ISO 20022 + Xahau Payment</div>
+                </div>
+                <div class="zpk-badge">ZPK&trade; &ndash; Hooks Enforced Message</div>
+            </div>
+            <!-- Progress steps -->
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num active" id="step-num-1">1</div>
+                    <div class="step-label active" id="step-lbl-1">Enter Details</div>
+                </div>
+                <div class="step-connector" id="conn-1"></div>
+                <div class="step">
+                    <div class="step-num" id="step-num-2">2</div>
+                    <div class="step-label" id="step-lbl-2">Confirm</div>
+                </div>
+                <div class="step-connector" id="conn-2"></div>
+                <div class="step">
+                    <div class="step-num" id="step-num-3">3</div>
+                    <div class="step-label" id="step-lbl-3">Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Enter Details -->
+        <div id="view-enter" class="card-body">
+            <div class="section-label">Sender &amp; Recipient</div>
+            <div class="form-row">
+                <div class="field-group">
+                    <label class="field-label">Sender</label>
+                    <input class="field-input" type="text" id="f-sender" placeholder="Your institution" value="Global Settlement Terminal">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Recipient</label>
+                    <input class="field-input" type="text" id="f-recipient" placeholder="Select or enter IBAN" value="rsW5V8dCmJohohFFF3UGnTQb2KASs6DRBM">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Recipient BIC</label>
+                    <input class="field-input" type="text" id="f-bic" placeholder="e.g. CHASUS33" maxlength="11">
+                </div>
+            </div>
+
+            <div class="section-label">Payment Information</div>
+            <div class="form-row">
+                <div class="field-group">
+                    <label class="field-label">Amount</label>
+                    <input class="field-input" type="text" id="f-amount" placeholder="1000.00" value="0.001">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Currency</label>
+                    <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Purpose</label>
+                    <select class="field-input" id="f-purpose">
+                        <option>Invoice Payment (pacs.008)</option>
+                        <option>Bank Transfer (pacs.009)</option>
+                        <option>Return Payment (pacs.004)</option>
+                        <option>Credit Transfer (pain.001)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="field-group">
+                    <label class="field-label">Reference</label>
+                    <input class="field-input" type="text" id="f-ref" placeholder="Payment reference">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Value Date</label>
+                    <input class="field-input" type="date" id="f-date">
+                </div>
+            </div>
+
+            <span class="err-msg" id="form-err">Please fill in all required fields.</span>
+
+            <button class="btn-settle" onclick="goConfirm()">Review &amp; Confirm</button>
+            <div class="btn-settle-sub">Sends ISO 20022 Message + Xahau Payment simultaneously</div>
+        </div>
+
+        <!-- Step 2: Confirm -->
+        <div id="view-confirm" class="card-body" style="display:none;">
+            <div class="section-label">Payment Summary</div>
+
+            <div class="dest-box" id="confirm-summary">
+                <div class="dest-label">Payment Destination</div>
+                <div class="dest-value" id="confirm-recipient">-</div>
+                <div class="dest-sub" id="confirm-detail">-</div>
+            </div>
+
+            <div style="background:#f8fafc;border-radius:10px;border:1px solid var(--brd);overflow:hidden;margin-bottom:24px;">
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Amount</span>
+                    <span class="receipt-row-val" id="confirm-amount">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Purpose</span>
+                    <span class="receipt-row-val" id="confirm-purpose">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Value Date</span>
+                    <span class="receipt-row-val" id="confirm-date">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">ZPK Compliance</span>
+                    <span class="receipt-row-val green">Message will be shattered. Nothing stored.</span>
+                </div>
+            </div>
+
+            <button class="btn-settle" id="btn-sign" onclick="settle()">
+                Confirm &amp; Settle Simultaneously
+            </button>
+            <div class="btn-settle-sub">Sends ISO 20022 Message + Xahau Payment simultaneously</div>
+            <button class="btn-secondary" onclick="goBack()">Back</button>
+        </div>
+
+        <!-- Step 3: Receipt -->
+        <div id="view-receipt" class="receipt">
+            <div class="receipt-header">
+                <div class="receipt-check">&#10003;</div>
+                <div class="receipt-title" style="white-space:nowrap;">&middot; Payment Confirmed &middot; Message Shattered &amp; Ready</div>
+                <div class="receipt-sub">Both rails settled. ISO message shattered. Nothing stored.</div>
+            </div>
+            <div class="receipt-rows">
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Transaction</span>
+                    <span class="receipt-row-val" id="r-txid">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">DNA Anchor</span>
+                    <span class="receipt-row-val" id="r-dna">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">ISO Message</span>
+                    <span class="receipt-row-val green">Shattered - Zero Persistent Knowledge</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Xahau Settlement</span>
+                    <span class="receipt-row-val green">Confirmed onchain</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Compliance</span>
+                    <span class="receipt-row-val green">ZPK&trade; &ndash; Hooks Enforced Message</span>
+                </div>
+            </div>
+            <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
+                Recover ISO Message
+                <span class="btn-recover-tip" data-tip="Anyone with the anchor AND authorization can reassemble the message through the AIFS reassembly endpoint.">?</span>
+            </a>
+            <button class="btn-new" onclick="reset()">New Payment</button>
+            <button class="btn-secondary" id="btn-explorer" onclick="openExplorer()" style="display:none;">View on Xahau Explorer</button>
+        </div>
+
+        <!-- Live status bar -->
+        <div class="live-status">
+            <div class="status-rail" id="iso-rail">
+                <div class="status-icon-wrap iso" id="iso-icon-wrap">
+                    <i class="bi bi-envelope"></i>
+                </div>
+                <div class="status-info">
+                    <div class="status-title" id="iso-title">ISO Message</div>
+                    <div class="status-detail" id="iso-detail">Awaiting submission</div>
+                </div>
+                <div class="status-check" id="iso-check">&#10003;</div>
+            </div>
+            <div class="status-rail" id="xah-rail">
+                <div class="status-icon-wrap xah" id="xah-icon-wrap">
+                    <i class="bi bi-globe"></i>
+                </div>
+                <div class="status-info">
+                    <div class="status-title" id="xah-title">Xahau Payment</div>
+                    <div class="status-detail" id="xah-detail">Awaiting signature</div>
+                </div>
+                <div class="status-check" id="xah-check">&#10003;</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Xaman connect modal -->
+<div class="modal-overlay" id="connect-overlay">
+    <div class="modal">
+        <div class="modal-title">Connect Wallet</div>
+        <div class="modal-sub">Scan with Xaman to verify your identity. No transaction will be sent.</div>
+        <div class="qr-wrap"><div id="connect-qr"></div></div>
+        <div class="modal-status" id="connect-status">Waiting for scan...</div>
+        <button class="btn-modal-cancel" onclick="cancelConnect()">Cancel</button>
+        <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
+    </div>
+</div>
+
+<!-- Xaman signing modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">Authorize Payment</div>
+        <div class="modal-sub">Scan the code below with your Xaman wallet to authorize the simultaneous ISO 20022 message and Xahau settlement.</div>
+        <div class="qr-wrap"><div id="portal-qr"></div></div>
+        <div class="modal-status" id="modal-status">Waiting for signature...</div>
+        <button class="btn-modal-cancel" onclick="cancelModal()">Cancel</button>
+        <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    <div>ZPKPay &nbsp;·&nbsp; AIFS Protocol Inc. &nbsp;·&nbsp; aifs.dev</div>
+    <div style="margin-top:4px;">Patent Pending &nbsp;·&nbsp; USPTO 19/551,805 &nbsp;·&nbsp; 19/560,251 &nbsp;·&nbsp; 19/564,384 &nbsp;·&nbsp; 64/040,051</div>
+</div>
+
+<script>
+// ============================================================
+// ZPKPay-portal.html · Institutional Portal JS
+// TJ Reynolds · AIFS Protocol Inc · April 2026
+// Same backend as ZPKPay-xahau.html. Cleaner UI only.
+// ============================================================
+
+const XUMM_API_KEY  = 'ed9a6194-1aae-4aa9-b2b8-977771bc2c6b';
+const API_BASE      = 'https://api.aifs.dev/api/v1';
+const XAHAU_NET_ID  = 21337;
+const EXPLORER      = 'https://xahauexplorer.com/explorer/';
+
+let xumm        = null;
+let walletAddr  = null;
+let dnaAnchor   = null;
+let settleTxId  = null;
+let pollTimer   = null;
+
+// ── Date in topbar ──
+(function() {
+    var d = new Date();
+    var opts = { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' };
+    document.getElementById('portal-date').textContent = d.toLocaleDateString('en-GB', opts);
+})();
+
+// ── Default value date to today ──
+(function() {
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('f-date').value = today;
+})();
+
+// ── Step helpers ──
+function setStep(n) {
+    [1,2,3].forEach(function(i) {
+        var num = document.getElementById('step-num-' + i);
+        var lbl = document.getElementById('step-lbl-' + i);
+        num.classList.remove('active','done');
+        lbl.classList.remove('active');
+        if (i < n) { num.classList.add('done'); num.textContent = '\u2713'; }
+        else if (i === n) { num.classList.add('active'); lbl.classList.add('active'); if (n > 1 && i > 1) num.textContent = i; }
+        else { num.textContent = i; }
+    });
+    [1,2].forEach(function(i) {
+        var c = document.getElementById('conn-' + i);
+        if (c) c.classList.toggle('done', i < n);
+    });
+    document.getElementById('view-enter').style.display   = n === 1 ? 'block' : 'none';
+    document.getElementById('view-confirm').style.display = n === 2 ? 'block' : 'none';
+    document.getElementById('view-receipt').style.display = n === 3 ? 'block' : 'none';
+}
+
+// ── Status bar helpers ──
+function setIsoStatus(state, detail) {
+    var rail  = document.getElementById('iso-rail');
+    var wrap  = document.getElementById('iso-icon-wrap');
+    var det   = document.getElementById('iso-detail');
+    var check = document.getElementById('iso-check');
+    var title = document.getElementById('iso-title');
+    rail.className  = 'status-rail' + (state === 'active' ? ' rail-active' : state === 'pending' ? ' rail-pending' : state === 'failed' ? ' rail-failed' : '');
+    wrap.className  = 'status-icon-wrap iso' + (state === 'active' ? ' active' : '');
+    check.className = 'status-check' + (state === 'active' ? ' active' : '');
+    title.textContent = state === 'active' ? 'ISO Message Sent' : 'ISO Message';
+    det.textContent = detail;
+}
+function setXahStatus(state, detail) {
+    var rail  = document.getElementById('xah-rail');
+    var wrap  = document.getElementById('xah-icon-wrap');
+    var det   = document.getElementById('xah-detail');
+    var check = document.getElementById('xah-check');
+    var title = document.getElementById('xah-title');
+    rail.className  = 'status-rail' + (state === 'active' ? ' rail-active' : state === 'pending' ? ' rail-pending' : state === 'failed' ? ' rail-failed' : '');
+    wrap.className  = 'status-icon-wrap xah' + (state === 'active' ? ' active' : '');
+    check.className = 'status-check' + (state === 'active' ? ' active' : '');
+    title.textContent = state === 'active' ? 'Hooks Confirmed' : 'Xahau Payment';
+    det.textContent = detail;
+}
+
+// ── Wallet connect ──
+var connectTimer = null;
+
+async function connectWallet() {
+    if (walletAddr) { return; }
+    try {
+        var res = await fetch(API_BASE + '/auth/xaman/challenge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: 'connect' })
+        });
+        var data = await res.json();
+        if (!data.success || !data.qrUrl) throw new Error('Challenge failed');
+
+        // Show connect modal with QR
+        var overlay = document.getElementById('connect-overlay');
+        overlay.classList.add('open');
+        var qrDiv = document.getElementById('connect-qr');
+        qrDiv.innerHTML = '';
+        if (data.qrUrl && data.qrUrl.startsWith('http')) {
+            var img = document.createElement('img');
+            img.src = data.qrUrl;
+            img.style.cssText = 'width:200px;height:200px;border-radius:8px;';
+            qrDiv.appendChild(img);
+        }
+
+        // Poll for signed identity
+        var attempts = 0;
+        connectTimer = setInterval(async function() {
+            attempts++;
+            if (attempts > 75) { cancelConnect(); return; }
+            try {
+                var sr = await fetch(API_BASE + '/auth/xaman/status/' + data.uuid);
+                var sd = await sr.json();
+                if (sd.verified && sd.account) {
+                    clearInterval(connectTimer);
+                    document.getElementById('connect-overlay').classList.remove('open');
+                    walletAddr = sd.account;
+                    document.getElementById('wallet-btn').textContent =
+                        walletAddr.substring(0,6) + '...' + walletAddr.slice(-4);
+                    // If settle was waiting on wallet, proceed automatically
+                    settle();
+                }
+            } catch(e) {}
+        }, 2000);
+
+    } catch(e) {
+        console.warn('Connect wallet error:', e.message);
+    }
+}
+
+function cancelConnect() {
+    clearInterval(connectTimer);
+    document.getElementById('connect-overlay').classList.remove('open');
+}
+
+// ── Step 1 to Step 2 ──
+function goConfirm() {
+    var recipient = document.getElementById('f-recipient').value.trim();
+    var amount    = document.getElementById('f-amount').value.trim();
+    var bic       = document.getElementById('f-bic').value.trim();
+    var err       = document.getElementById('form-err');
+    if (!recipient || !amount) {
+        err.style.display = 'block';
+        return;
+    }
+    err.style.display = 'none';
+    var purpose  = document.getElementById('f-purpose').value;
+    var date     = document.getElementById('f-date').value;
+    var ref      = document.getElementById('f-ref').value || 'N/A';
+
+    document.getElementById('confirm-recipient').textContent =
+        bic ? recipient + ' (' + bic + ')' : recipient;
+    document.getElementById('confirm-detail').textContent =
+        'Ref: ' + ref;
+    document.getElementById('confirm-amount').textContent =
+        'XAH ' + amount;
+    document.getElementById('confirm-purpose').textContent = purpose;
+    document.getElementById('confirm-date').textContent = date;
+    setStep(2);
+}
+
+function goBack() { setStep(1); }
+
+// ── Step 2: Settle ──
+async function settle() {
+    if (!walletAddr) {
+        connectWallet();
+        return;
+    }
+    var btn = document.getElementById('btn-sign');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Shattering ISO message...';
+
+    setIsoStatus('pending', 'Shattering ISO message...');
+
+    try {
+        // Build a minimal ISO payload from form fields
+        var payload = buildIsoPayload();
+
+        // 1. Shatter
+        var liquifyRes = await fetch('https://api.aifs.dev/api/v1/liquify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                manifest: payload,
+                originAddress: walletAddr || 'demo-portal',
+                receiverAddress: document.getElementById('f-bic').value.trim() || 'RECEIVER',
+                allowSenderReassembly: true
+            })
+        });
+        var liquifyData = await liquifyRes.json();
+        if (!liquifyData.success || !liquifyData.dna) throw new Error('Shatter failed');
+
+        dnaAnchor = liquifyData.dna;
+        setIsoStatus('active', 'Shattered - DNA ' + dnaAnchor.substring(0,8) + '...');
+
+        // 2. Prepare Xahau tx — XAH drops through Hook gateway
+        var rawAmount = document.getElementById('f-amount').value.trim().replace(/,/g,'');
+        var xahDrops = Math.round((parseFloat(rawAmount) || 0.001) * 1000000).toString();
+        var txjson = {
+            TransactionType: 'Payment',
+            Destination: 'rHs7o2n6r6YaRkzhg7zZFa1VWwiEx84hKr',
+            Amount: xahDrops,
+            Memos: [{
+                Memo: {
+                    MemoType: toHex('DNA'),
+                    MemoData: toHex('DNA' + dnaAnchor)
+                }
+            }],
+            NetworkID: XAHAU_NET_ID
+        };
+
+        // 3. Get Xaman payload via backend
+        btn.innerHTML = '<span class="spinner"></span>Awaiting Xaman signature...';
+        setXahStatus('pending', 'Awaiting Xaman signature...');
+
+        var settleRes = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ txjson: txjson, dna: dnaAnchor })
+        });
+        var settleData = await settleRes.json();
+        if (!settleData.success || !settleData.uuid) throw new Error('Settlement init failed');
+
+        // 4. Show QR modal
+        openModal(settleData.qrUrl || settleData.deepLink, settleData.uuid);
+
+    } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm &amp; Settle Simultaneously';
+        setIsoStatus('failed', 'Error: ' + e.message);
+        setXahStatus('', 'Awaiting signature');
+    }
+}
+
+// ── Build ISO 20022 XML payload ──
+function buildIsoPayload() {
+    var purpose  = document.getElementById('f-purpose').value;
+    var sender   = document.getElementById('f-sender').value.trim() || 'Global Settlement Terminal';
+    var recipient= document.getElementById('f-recipient').value.trim();
+    var bic      = document.getElementById('f-bic').value.trim() || 'AIFSZPK0';
+    var amount   = document.getElementById('f-amount').value.trim() || '0.001';
+    var ref      = document.getElementById('f-ref').value.trim() || ('AIFS-' + Date.now());
+    var valDate  = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
+    var now      = new Date().toISOString();
+
+    // Map purpose label to message type code
+    var msgCode = 'pacs.008.001.09';
+    if (purpose.indexOf('pacs.009') !== -1) msgCode = 'pacs.009.001.08';
+    else if (purpose.indexOf('pacs.004') !== -1) msgCode = 'pacs.004.001.09';
+    else if (purpose.indexOf('pain.001') !== -1) msgCode = 'pain.001.001.09';
+
+    // Generate UETR (UUID v4 format)
+    var uetr = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:' + msgCode + '">\n' +
+        '  <FIToFICstmrCdtTrf>\n' +
+        '    <GrpHdr>\n' +
+        '      <MsgId>' + ref + '</MsgId>\n' +
+        '      <CreDtTm>' + now + '</CreDtTm>\n' +
+        '      <NbOfTxs>1</NbOfTxs>\n' +
+        '    </GrpHdr>\n' +
+        '    <CdtTrfTxInf>\n' +
+        '      <PmtId>\n' +
+        '        <InstrId>' + ref + '</InstrId>\n' +
+        '        <EndToEndId>' + ref + '</EndToEndId>\n' +
+        '        <UETR>' + uetr + '</UETR>\n' +
+        '      </PmtId>\n' +
+        '      <IntrBkSttlmAmt Ccy="XAH">' + amount + '</IntrBkSttlmAmt>\n' +
+        '      <IntrBkSttlmDt>' + valDate + '</IntrBkSttlmDt>\n' +
+        '      <InstgAgt>\n' +
+        '        <FinInstnId>\n' +
+        '          <BICFI>AIFSZPK0</BICFI>\n' +
+        '          <Nm>' + sender + '</Nm>\n' +
+        '        </FinInstnId>\n' +
+        '      </InstgAgt>\n' +
+        '      <InstdAgt>\n' +
+        '        <FinInstnId>\n' +
+        '          <BICFI>' + bic + '</BICFI>\n' +
+        '          <Nm>' + recipient + '</Nm>\n' +
+        '        </FinInstnId>\n' +
+        '      </InstdAgt>\n' +
+        '      <Dbtr><Nm>' + sender + '</Nm></Dbtr>\n' +
+        '      <Cdtr><Nm>' + recipient + '</Nm></Cdtr>\n' +
+        '    </CdtTrfTxInf>\n' +
+        '  </FIToFICstmrCdtTrf>\n' +
+        '</Document>';
+}
+
+// ── Hex encode ──
+function toHex(str) {
+    var result = '';
+    for (var i = 0; i < str.length; i++) {
+        result += str.charCodeAt(i).toString(16).padStart(2,'0').toUpperCase();
+    }
+    return result;
+}
+
+// ── Modal ──
+function openModal(qrUrl, uuid) {
+    var overlay = document.getElementById('modal-overlay');
+    overlay.classList.add('open');
+    var qrDiv = document.getElementById('portal-qr');
+    qrDiv.innerHTML = '';
+    if (qrUrl && qrUrl.startsWith('http')) {
+        var img = document.createElement('img');
+        img.src = qrUrl;
+        img.style.cssText = 'width:200px;height:200px;border-radius:8px;';
+        qrDiv.appendChild(img);
+    }
+    pollStatus(uuid);
+}
+
+function cancelModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    clearInterval(pollTimer);
+    var btn = document.getElementById('btn-sign');
+    btn.disabled = false;
+    btn.innerHTML = 'Confirm &amp; Settle Simultaneously';
+    setXahStatus('', 'Awaiting signature');
+}
+
+// ── Poll for tx confirmation ──
+async function pollStatus(uuid) {
+    var attempts = 0;
+    pollTimer = setInterval(async function() {
+        attempts++;
+        if (attempts > 60) { clearInterval(pollTimer); cancelModal(); return; }
+        try {
+            var res  = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau/status/' + uuid);
+            var data = await res.json();
+            if (data.signed) {
+                clearInterval(pollTimer);
+                document.getElementById('modal-overlay').classList.remove('open');
+                var txid = data.txid || data.txHash || '';
+                settleTxId = txid;
+                setXahStatus('active', txid ? txid.substring(0,12) + '...' : 'Confirmed');
+                showReceipt(txid);
+            }
+        } catch(e) {}
+    }, 2000);
+}
+
+// ── Show receipt ──
+function showReceipt(txid) {
+    document.getElementById('r-dna').textContent = dnaAnchor || '-';
+    document.getElementById('r-txid').textContent = txid ? txid.substring(0,16) + '...' : 'Confirmed';
+    if (txid) {
+        var exBtn = document.getElementById('btn-explorer');
+        exBtn.style.display = 'block';
+    }
+    // Wire recover button with DNA anchor, sender role, and txid pre-filled
+    if (dnaAnchor) {
+        var recoverUrl = 'https://aifs.dev/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
+        if (txid) recoverUrl += '&txid=' + txid;
+        document.getElementById('btn-recover').href = recoverUrl;
+    }
+    setStep(3);
+    var btn = document.getElementById('btn-sign');
+    btn.disabled = false;
+    btn.innerHTML = 'Confirm &amp; Settle Simultaneously';
+}
+
+function openExplorer() {
+    if (settleTxId) window.open(EXPLORER + settleTxId, '_blank');
+}
+
+// ── Reset ──
+function reset() {
+    dnaAnchor  = null;
+    settleTxId = null;
+    setStep(1);
+    setIsoStatus('', 'Awaiting submission');
+    setXahStatus('', 'Awaiting signature');
+    document.getElementById('f-recipient').value = 'rsW5V8dCmJohohFFF3UGnTQb2KASs6DRBM';
+    document.getElementById('f-amount').value = '0.001';
+    document.getElementById('f-bic').value = '';
+    document.getElementById('f-ref').value = '';
+}
+</script>
+
+</body>
+</html>
