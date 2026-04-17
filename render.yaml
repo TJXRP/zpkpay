@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: zpkpay
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600

@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+    ============================================================
+    zpk-protocol.html · ZPK Protocol Specification
+    TJ Reynolds · AIFS Protocol Inc · April 2026
+
+    RULES:
+    - No new .md files without TJ authorization
+    - No em dashes
+    - No placeholder code
+    ============================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZPK Protocol Specification · AIFS Protocol Inc.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1f36'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='18' font-weight='900' text-anchor='middle' fill='white'>Z</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --zpk-navy: #1a1f36;
+    --zpk-orange: #e8960c;
+    --zpk-blue: #008CFF;
+    --zpk-green: #16a34a;
+    --zpk-cream: #fdf4f0;
+    --zpk-muted: #6b7280;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+/* ── Top bar ── */
+.spec-topbar {
+    background: var(--zpk-cream);
+    color: var(--zpk-navy);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 3px solid var(--zpk-orange);
+}
+.spec-brand {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--zpk-navy);
+}
+.spec-brand span { color: var(--zpk-orange); }
+.spec-version {
+    font-size: 12px;
+    color: var(--zpk-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+.spec-badge {
+    background: var(--zpk-orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+}
+
+/* ── Sidebar ── */
+.spec-sidebar {
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    background: #fff;
+    border-right: 1px solid #e2e8f0;
+    padding: 24px 0;
+}
+.sidebar-section {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--zpk-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 16px 24px 6px;
+}
+.sidebar-link {
+    display: block;
+    padding: 7px 24px;
+    font-size: 13px;
+    color: #374151;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    color: var(--zpk-blue);
+    border-left-color: var(--zpk-blue);
+    background: rgba(0,140,255,0.04);
+}
+
+/* ── Content ── */
+.spec-content {
+    padding: 40px 48px 80px;
+    max-width: 900px;
+}
+
+/* ── Section cards ── */
+.spec-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+.spec-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+    transition: background 0.15s;
+}
+.spec-section-header:hover { background: #f8fafc; }
+.spec-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--zpk-navy);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.spec-section-num {
+    width: 28px;
+    height: 28px;
+    background: var(--zpk-navy);
+    color: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.spec-section-body {
+    padding: 0 28px 28px;
+    border-top: 1px solid #f1f5f9;
+}
+.spec-section-body.collapsed { display: none; }
+
+/* ── Code blocks ── */
+.code-block {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    margin: 16px 0;
+    border: 1px solid #1e293b;
+}
+.code-block pre {
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.code-block .code-lang {
+    font-size: 11px;
+    color: #64748b;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.btn-copy {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+}
+.btn-copy:hover { background: #334155; color: #fff; }
+.btn-copy.copied { background: var(--zpk-green); color: #fff; border-color: var(--zpk-green); }
+
+/* ── Inline code ── */
+code {
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+}
+
+/* ── Callouts ── */
+.callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.callout-info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout-warn { background: #fffbeb; border-left: 4px solid var(--zpk-orange); color: #92400e; }
+.callout-danger { background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; }
+.callout-success { background: #f0fdf4; border-left: 4px solid var(--zpk-green); color: #166534; }
+
+/* ── Tables ── */
+.spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 16px 0;
+}
+.spec-table th {
+    background: var(--zpk-navy);
+    color: #fff;
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.spec-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+}
+.spec-table tr:last-child td { border-bottom: none; }
+.spec-table tr:hover td { background: #f8fafc; }
+
+/* ── Anchor diagram ── */
+.anchor-diagram {
+    display: flex;
+    align-items: stretch;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+}
+.anchor-seg {
+    padding: 16px;
+    text-align: center;
+    flex: 1;
+}
+.anchor-seg-hash { background: #eff6ff; border-right: 2px solid #e2e8f0; }
+.anchor-seg-sig { background: #fef3c7; }
+.anchor-seg-label { font-size: 11px; color: var(--zpk-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.anchor-seg-value { font-size: 14px; font-weight: 700; color: var(--zpk-navy); letter-spacing: 0.04em; }
+.anchor-seg-desc { font-size: 11px; color: var(--zpk-muted); margin-top: 6px; }
+
+/* ── Flow diagram ── */
+.flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 20px 0;
+}
+.flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+.flow-step:last-child { border-bottom: none; }
+.flow-num {
+    width: 32px;
+    height: 32px;
+    background: var(--zpk-blue);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.flow-content { flex: 1; padding-top: 4px; }
+.flow-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.flow-desc { font-size: 13px; color: #475569; line-height: 1.6; }
+
+/* ── Status pills ── */
+.pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.pill-live { background: #dcfce7; color: #166534; }
+.pill-pending { background: #fef9c3; color: #854d0e; }
+.pill-required { background: #fee2e2; color: #991b1b; }
+
+/* ── Hero ── */
+.spec-hero {
+    background: var(--zpk-navy);
+    color: #fff;
+    padding: 48px;
+    margin-bottom: 32px;
+    border-radius: 12px;
+}
+.spec-hero h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+.spec-hero h1 span { color: var(--zpk-orange); }
+.spec-hero p {
+    color: rgba(255,255,255,0.65);
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 600px;
+    margin-bottom: 0;
+}
+.hero-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+.hero-meta-item {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    font-family: 'JetBrains Mono', monospace;
+}
+.hero-meta-item strong { color: rgba(255,255,255,0.85); display: block; margin-bottom: 2px; }
+
+/* ── Footer ── */
+.spec-footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 12px;
+    color: var(--zpk-muted);
+    border-top: 1px solid #e2e8f0;
+    margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="spec-topbar">
+    <div>
+        <div class="spec-brand">AIFS Protocol Inc. &nbsp;|&nbsp; <span>ZPK</span> Protocol Specification</div>
+        <div class="spec-version">v1.0-pilot &nbsp;·&nbsp; April 2026 &nbsp;·&nbsp; Xahau Mainnet</div>
+    </div>
+    <div class="spec-badge">PATENT PENDING</div>
+</div>
+
+<div class="container-fluid" style="padding:0;">
+<div class="row g-0">
+
+    <!-- Sidebar -->
+    <div class="col-lg-2 d-none d-lg-block">
+        <div class="spec-sidebar">
+            <div class="sidebar-section">Overview</div>
+            <a class="sidebar-link active" href="#overview">What is ZPK</a>
+            <a class="sidebar-link" href="#flow">Protocol Flow</a>
+
+            <div class="sidebar-section">Technical</div>
+            <a class="sidebar-link" href="#anchor">Anchor Format</a>
+            <a class="sidebar-link" href="#hook">Hook Interface</a>
+            <a class="sidebar-link" href="#memo">Memo Format</a>
+            <a class="sidebar-link" href="#api">API Contract</a>
+
+            <div class="sidebar-section">Compliance</div>
+            <a class="sidebar-link" href="#gating">Compliance Gating</a>
+            <a class="sidebar-link" href="#reassembly">Reassembly</a>
+
+            <div class="sidebar-section">Deployment</div>
+            <a class="sidebar-link" href="#checklist">Production Checklist</a>
+            <a class="sidebar-link" href="#samples">Code Samples</a>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-lg-10">
+        <div class="spec-content">
+
+            <!-- Hero -->
+            <div class="spec-hero">
+                <h1>Zero Persistent Knowledge <span>(ZPK)</span> Protocol</h1>
+                <p>An application-layer compliance protocol for stateless ISO 20022 messaging bound to on-chain settlement. The message never rests. The anchor never lies. The ledger enforces.</p>
+                <div class="hero-meta">
+                    <div class="hero-meta-item"><strong>Status</strong>Pilot v1 &nbsp;<span class="pill pill-live">LIVE</span></div>
+                    <div class="hero-meta-item"><strong>Network</strong>Xahau Mainnet &nbsp;(NetworkID 21337)</div>
+                    <div class="hero-meta-item"><strong>Hook</strong>rHs7o2n6r6YaRkzhg7zZFa1VWwiEx84hKr</div>
+                    <div class="hero-meta-item"><strong>Patents</strong>19/551,805 · 19/560,251 · 19/564,384</div>
+                </div>
+            </div>
+
+            <!-- Section 1: What is ZPK -->
+            <div class="spec-section" id="overview">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">1</div>
+                        What is ZPK
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>ZPK is not encryption. Encryption assumes the data is still there -- protected, persistent, waiting. ZPK makes persistence architecturally impossible.</p>
+
+                    <div class="callout callout-info">
+                        <strong>ZPK Protocol Definition</strong><br>
+                        Zero Persistent Knowledge (ZPK) is an application-layer protocol that shreds sensitive data into 1,024 cryptographic particles at the moment of creation, commits a mathematical anchor to a public ledger, and permits reassembly only by cryptographically verified authorized parties -- entirely in volatile RAM.
+                    </div>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Property</th><th>Encryption</th><th>ZPK</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Data at rest</td><td>Yes, encrypted</td><td>No. Never.</td></tr>
+                            <tr><td>Breach exposure</td><td>Ciphertext stolen</td><td>Nothing to steal</td></tr>
+                            <tr><td>Compliance proof</td><td>Audit logs</td><td>Ledger anchor (immutable)</td></tr>
+                            <tr><td>Reassembly</td><td>Any key holder</td><td>Authorized wallet only</td></tr>
+                            <tr><td>Data liability</td><td>Managed</td><td>Liquidated</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <strong>What ZPK is NOT responsible for</strong><br>
+                        ZPK protects message content and sender identity at the protocol layer. It does not protect social account linkage (e.g. X/TipBot handles), network metadata, or wallet address association on public ledgers. These are separate concerns.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Protocol Flow -->
+            <div class="spec-section" id="flow">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">2</div>
+                        Protocol Flow
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>Every ZPK transaction follows this exact sequence. No step can be skipped. The ledger enforces the order.</p>
+
+                    <div class="flow">
+                        <div class="flow-step">
+                            <div class="flow-num">1</div>
+                            <div class="flow-content">
+                                <div class="flow-title">Identity Bind</div>
+                                <div class="flow-desc">The sender authenticates with their wallet. The wallet address becomes the XOR salt for the shatter operation. No wallet connection -- no shatter. The identity is bound to the data mathematically before anything moves.</div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num">2</div>
+                            <div class="flow-content">
+                                <div class="flow-title">Entropic Dispersal (Shatter)</div>
+                                <div class="flow-desc">The ISO message is wrapped in a Shannon entropy nonce and shattered into exactly 1,024 particles. Each particle is XOR-masked using a deterministic marker derived from the sender's identity salt. The original message ceases to exist in any readable form.</div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num">3</div>
+                            <div class="flow-content">
+                                <div class="flow-title">DNA Anchor Generation</div>
+                                <div class="flow-desc">A 24-character hex anchor is derived from a sequential SHA-256 hash of all 1,024 particles, plus a global uniqueness nonce. The last 4 characters are an HMAC-SHA256 engine signature. This anchor is the only forensic pointer to the shattered data.</div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num">4</div>
+                            <div class="flow-content">
+                                <div class="flow-title">Dual Rail Settlement</div>
+                                <div class="flow-desc">A single wallet signature triggers two simultaneous actions: the DNA anchor is embedded in the transaction Memo and HookParameter, and the asset transfer is submitted to the settlement rail. Both happen in one signed transaction.</div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num">5</div>
+                            <div class="flow-content">
+                                <div class="flow-title">Hook Enforcement</div>
+                                <div class="flow-desc">The ZPK-Enforcer Hook on the recipient address intercepts the incoming payment. It reads the HookParameter named <code>444E41</code> (hex for "DNA"), validates the anchor format, and checks single-use state. If any check fails, the transaction rolls back. The payment is never made.</div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num">6</div>
+                            <div class="flow-content">
+                                <div class="flow-title">Authorized Reassembly</div>
+                                <div class="flow-desc">The authorized party (sender or receiver) signs a challenge with their Xaman wallet. The backend verifies the signature, confirms identity against the stored authorization record, and reassembles the message in volatile RAM only. The data exists for the duration of the session and is purged on close.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Anchor Format -->
+            <div class="spec-section" id="anchor">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">3</div>
+                        Anchor Format
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>The DNA anchor is a 24-character uppercase hex string. It is the only on-chain artifact of a ZPK transaction.</p>
+
+                    <div class="anchor-diagram">
+                        <div class="anchor-seg anchor-seg-hash">
+                            <div class="anchor-seg-label">Hash Portion</div>
+                            <div class="anchor-seg-value">chars 0-19</div>
+                            <div class="anchor-seg-desc">SHA-256 of 1,024 particles<br>+ uniqueness nonce<br>Truncated to 20 chars</div>
+                        </div>
+                        <div class="anchor-seg anchor-seg-sig">
+                            <div class="anchor-seg-label">Engine Signature</div>
+                            <div class="anchor-seg-value">chars 20-23</div>
+                            <div class="anchor-seg-desc">HMAC-SHA256 of hash portion<br>Proves AIFS engine origin<br>4-char truncated</div>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Live example anchor</strong><br>
+                        <code>09BC5A5D157C2E503831</code><code>A3F2</code><br>
+                        Characters 0-19: hash portion &nbsp;|&nbsp; Characters 20-23: engine signature
+                    </div>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Property</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Total length</td><td>24 characters (pilot) · 64 characters (production)</td></tr>
+                            <tr><td>Character set</td><td>Uppercase hex [0-9A-F]</td></tr>
+                            <tr><td>Regex (pilot)</td><td><code>/^[0-9A-F]{24}$/</code></td></tr>
+                            <tr><td>Prefix in Memo</td><td><code>DNA</code> (3 chars, ASCII)</td></tr>
+                            <tr><td>HookParameter name</td><td><code>444E41</code> (hex for "DNA")</td></tr>
+                            <tr><td>HookParameter value</td><td>Anchor hex-encoded as UTF-8 (48 hex chars for 24-char anchor)</td></tr>
+                            <tr><td>Global uniqueness</td><td>Guaranteed by Shannon nonce injection at shatter time</td></tr>
+                            <tr><td>Single-use enforcement</td><td>Hook state_set on Xahau -- replay rejected on-chain</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <strong>Pilot vs Production</strong><br>
+                        The current 24-character anchor is below the forensic integrity threshold for institutional volumes. Production requires a 64-character (full SHA-256) anchor. This change requires a coordinated Hook WASM update and new SetHook transaction. Do not change the anchor size without updating the Hook simultaneously.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Hook Interface -->
+            <div class="spec-section" id="hook">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">4</div>
+                        Hook Interface
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>The ZPK-Enforcer Hook is deployed on Xahau Mainnet. It runs autonomously on every incoming payment to the gateway address. No human is in the loop.</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Property</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Gateway address</td><td><code>rHs7o2n6r6YaRkzhg7zZFa1VWwiEx84hKr</code></td></tr>
+                            <tr><td>Hook hash</td><td><code>9D35CFCE2ACF4C59E15063AD09119AC4269EA1E11766F6A412D2B1443BDBBF6A</code></td></tr>
+                            <tr><td>SetHook tx</td><td><code>39249C41...</code></td></tr>
+                            <tr><td>Network</td><td>Xahau Mainnet (NetworkID 21337)</td></tr>
+                            <tr><td>Status</td><td><span class="pill pill-live">LIVE</span></td></tr>
+                        </tbody>
+                    </table>
+
+                    <h6 class="mt-4 mb-2 fw-bold">What the Hook validates</h6>
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Check</th><th>Condition</th><th>On failure</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>HookParameter present</td><td>Parameter named <code>444E41</code> must exist</td><td>Rollback</td></tr>
+                            <tr><td>Anchor format</td><td>Value must be 48 hex chars (24-char anchor, hex-encoded)</td><td>Rollback</td></tr>
+                            <tr><td>Single-use state</td><td>Anchor must not exist in Hook state_set</td><td>Rollback</td></tr>
+                            <tr><td>State commit</td><td>Anchor written to state on acceptance</td><td>N/A</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <strong>Engine signature verification is API-layer only in v1</strong><br>
+                        The Hook validates anchor format and single-use state. It does not yet verify the HMAC engine signature (chars 20-23) on-chain. This verification currently happens at the AIFS API layer. Hook v2 will implement full HMAC verification inside the WASM. Until then, direct Xahau submissions that bypass the API pass the Hook's format check but are not engine-verified.
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Installing this Hook on your own address</h6>
+                    <p class="text-muted" style="font-size:14px;">Anyone can install the ZPK-Enforcer Hook on their own Xahau address using the Hook hash above. Use the Xahau Hooks Builder at <code>hooks-builder.xrpl.org</code> and select "Install from HookHash".</p>
+
+                    <div class="code-block">
+                        <div class="code-lang">Hook Output (live example)</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.
+Validated in ledger 22189069 on Thursday, April 16, 2026 1:53 PM</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Memo Format -->
+            <div class="spec-section" id="memo">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">5</div>
+                        Memo Format
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>Every ZPK transaction must include a Memo field containing the DNA anchor. This is the human-readable forensic pointer on the ledger.</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Field</th><th>Value</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>MemoType</td><td><code>444E41</code></td><td>Hex for "DNA" -- constant, never changes</td></tr>
+                            <tr><td>MemoData</td><td><code>hex("DNA" + anchor)</code></td><td>Prefix "DNA" + 24-char anchor, hex-encoded</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-lang">Transaction Memo (JavaScript)</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>function toHex(str) {
+    return Array.from(str)
+        .map(c => c.charCodeAt(0).toString(16).padStart(2,'0').toUpperCase())
+        .join('');
+}
+
+const anchor = '09BC5A5D157C2E503831A3F2'; // 24-char DNA anchor
+
+const memo = {
+    Memo: {
+        MemoType: toHex('DNA'),           // 444E41
+        MemoData: toHex('DNA' + anchor)   // hex("DNA09BC5A5D157C2E503831A3F2")
+    }
+};</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-lang">HookParameter (JavaScript)</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>const hookParameter = {
+    HookParameter: {
+        HookParameterName:  '444E41',      // hex for "DNA" -- constant
+        HookParameterValue: toHex(anchor)  // 24-char anchor hex-encoded = 48 hex chars
+    }
+};</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: API Contract -->
+            <div class="spec-section" id="api">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">6</div>
+                        API Contract
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>Base URL: <code>https://api.aifs.dev/api/v1</code></p>
+
+                    <div class="callout callout-info">
+                        The AIFS API is currently private and available by arrangement only. Rate limits apply: 30 requests per 60 seconds on all endpoints.
+                    </div>
+
+                    <h6 class="mt-3 mb-2 fw-bold">POST /liquify &nbsp; <span class="pill pill-live">Shatter</span></h6>
+                    <p style="font-size:14px;">Shatters an ISO message into 1,024 particles and returns the DNA anchor.</p>
+
+                    <div class="code-block">
+                        <div class="code-lang">Request</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>{
+    "manifest":              "&lt;ISO 20022 XML string&gt;",
+    "originAddress":         "rSenderWalletAddress...",
+    "receiverAddress":       "rReceiverWalletAddress...",
+    "allowSenderReassembly": true
+}</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-lang">Response</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>{
+    "success": true,
+    "dna":     "09BC5A5D157C2E503831A3F2",
+    "arweaveId": "arweave-tx-id-if-uploaded"
+}</pre>
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">POST /materialize/:dna &nbsp; <span class="pill pill-live">Reassemble</span></h6>
+                    <p style="font-size:14px;">Reassembles the ISO message in RAM. Requires a valid Xaman signature proving wallet identity.</p>
+
+                    <div class="code-block">
+                        <div class="code-lang">Request</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>{
+    "address":   "rAuthorizedWalletAddress...",
+    "xamanUuid": "xaman-payload-uuid",
+    "authType":  "xaman",
+    "timestamp": 1713300000000
+}</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-lang">Response</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>{
+    "success":   true,
+    "data":      "&lt;reassembled ISO 20022 XML&gt;",
+    "integrity": 1.0,
+    "arweaveId": "arweave-tx-id"
+}</pre>
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Error Codes</h6>
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Code</th><th>Meaning</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>IDENTITY_MISMATCH</code></td><td>Requesting wallet is not the authorized sender or receiver</td></tr>
+                            <tr><td><code>SENDER_REASSEMBLY_DISABLED</code></td><td>Record is sealed. Receiver-only reassembly.</td></tr>
+                            <tr><td><code>ZPK_ANCHOR_INVALID</code></td><td>Anchor failed engine signature verification</td></tr>
+                            <tr><td><code>IDENTITY_REQUIRED</code></td><td>originAddress missing from shatter request</td></tr>
+                            <tr><td><code>MISSING_MANIFEST</code></td><td>No payload provided to shatter</td></tr>
+                            <tr><td><code>EXTRACTION_CAP_REACHED</code></td><td>Rate limit exceeded (50/min per wallet)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section 7: Compliance Gating -->
+            <div class="spec-section" id="gating">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">7</div>
+                        Compliance Gating
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>Compliance is not a parallel process in ZPK. It is a mathematical precondition for settlement. The payment cannot be made unless the compliance anchor is valid.</p>
+
+                    <div class="callout callout-success">
+                        <strong>The Compliance Rules Live at the Destination</strong><br>
+                        The Hook is installed on the receiving address. The sending institution does not decide what passes. The ledger does. This means compliance rules are enforced by the recipient's infrastructure, not the sender's policy.
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Dual Rail Transaction Structure</h6>
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Rail</th><th>What moves</th><th>Enforced by</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Private Rail</td><td>ZPK compliance anchor (DNA)</td><td>AIFS API + Hook WASM</td></tr>
+                            <tr><td>Public Rail</td><td>Asset transfer (XAH or token)</td><td>Xahau ledger consensus</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p class="mt-3" style="font-size:14px;">Both rails are committed in a single signed transaction. They are mathematically inseparable. If the Hook rejects the anchor, the entire transaction -- including the asset transfer -- rolls back.</p>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Rollback Conditions</h6>
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Condition</th><th>Result</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>No HookParameter named <code>444E41</code></td><td>Full rollback. Payment not made.</td></tr>
+                            <tr><td>Anchor wrong format or length</td><td>Full rollback. Payment not made.</td></tr>
+                            <tr><td>Anchor already used (replay)</td><td>Full rollback. Payment not made.</td></tr>
+                            <tr><td>Anchor fails engine signature (v2)</td><td>Full rollback. Payment not made.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section 8: Reassembly -->
+            <div class="spec-section" id="reassembly">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">8</div>
+                        Reassembly and Authorization
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <p>The shattered message can be reassembled only by cryptographically verified authorized parties. Authorization is wallet-based and enforced server-side.</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Role</th><th>Authorization</th><th>Salt used for XOR</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Sender</td><td>Wallet address matches <code>originAddress</code> from shatter time</td><td>Sender wallet address (lowercase)</td></tr>
+                            <tr><td>Receiver</td><td>Wallet address matches <code>receiverAddress</code> from shatter time</td><td>Sender wallet address (stored)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-danger">
+                        <strong>Identity Salt is the XOR Key</strong><br>
+                        The wallet address used at shatter time is the cryptographic salt for the XOR mask on all 1,024 particles. If the wrong identity is used during reassembly, the output is binary noise. This is by design. There is no error message that reveals the correct identity.
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">RAM Sovereignty</h6>
+                    <p style="font-size:14px;">The reassembled message exists only in server RAM during the active session. It is never written to disk. It is never logged. When the session closes, it is gone. This is the Zero Persistent Knowledge guarantee.</p>
+                </div>
+            </div>
+
+            <!-- Section 9: Production Checklist -->
+            <div class="spec-section" id="checklist">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">9</div>
+                        Production Checklist
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+                    <table class="spec-table">
+                        <thead>
+                            <tr><th>Item</th><th>Status</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Hook deployed on Mainnet</td><td><span class="pill pill-live">LIVE</span></td><td>Single-use enforcement active</td></tr>
+                            <tr><td>Engine signature (API layer)</td><td><span class="pill pill-live">LIVE</span></td><td>HMAC verified before HookParameter injection</td></tr>
+                            <tr><td>Replay protection</td><td><span class="pill pill-live">LIVE</span></td><td>Hook state_set enforced</td></tr>
+                            <tr><td>Dual authorization (sender + receiver)</td><td><span class="pill pill-live">LIVE</span></td><td>Both roles supported</td></tr>
+                            <tr><td>64-char anchor (full SHA-256)</td><td><span class="pill pill-required">REQUIRED</span></td><td>Requires Hook v2 + coordinated deploy</td></tr>
+                            <tr><td>Hook-side HMAC verification</td><td><span class="pill pill-required">REQUIRED</span></td><td>Closes direct Xahau submission gap</td></tr>
+                            <tr><td>Ed25519 engine signature</td><td><span class="pill pill-required">REQUIRED</span></td><td>Replaces HMAC for production</td></tr>
+                            <tr><td>Arweave permanent storage</td><td><span class="pill pill-pending">PILOT</span></td><td>Available, not mandatory in all flows</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <strong>Coordinated Deployment Required</strong><br>
+                        The 64-char anchor, Hook-side HMAC verification, and API regex update must ship as a single release. Deploying any one without the others will break every settlement transaction. The Hook and DNAFactory must always be versioned together.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 10: Code Samples -->
+            <div class="spec-section" id="samples">
+                <div class="spec-section-header" onclick="toggleSection(this)">
+                    <div class="spec-section-title">
+                        <div class="spec-section-num">10</div>
+                        Code Samples
+                    </div>
+                    <i class="bi bi-chevron-up toggle-icon"></i>
+                </div>
+                <div class="spec-section-body">
+
+                    <h6 class="mb-2 fw-bold">Full ZPK settlement flow (JavaScript)</h6>
+                    <div class="code-block">
+                        <div class="code-lang">JavaScript · End-to-End</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>const API = 'https://api.aifs.dev/api/v1';
+
+// Step 1: Shatter the ISO message
+const shatterRes = await fetch(`${API}/liquify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        manifest:              isoXmlString,
+        originAddress:         senderWalletAddress,
+        receiverAddress:       receiverWalletAddress,
+        allowSenderReassembly: true
+    })
+});
+const { dna } = await shatterRes.json();
+
+// Step 2: Build the Xahau transaction
+function toHex(str) {
+    return Array.from(str)
+        .map(c => c.charCodeAt(0).toString(16).padStart(2,'0').toUpperCase())
+        .join('');
+}
+
+const txjson = {
+    TransactionType: 'Payment',
+    Destination:     'rHs7o2n6r6YaRkzhg7zZFa1VWwiEx84hKr',
+    Amount:          '1000', // XAH drops
+    NetworkID:       21337,
+    Memos: [{
+        Memo: {
+            MemoType: toHex('DNA'),
+            MemoData: toHex('DNA' + dna)
+        }
+    }],
+    HookParameters: [{
+        HookParameter: {
+            HookParameterName:  '444E41',
+            HookParameterValue: toHex(dna)
+        }
+    }]
+};
+
+// Step 3: Submit via AIFS settle endpoint
+const settleRes = await fetch(`${API}/auth/xaman/settle-xahau`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ txjson, dna })
+});
+const { uuid, qrUrl } = await settleRes.json();
+// Display qrUrl to user for Xaman signing</pre>
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Reassembly flow (JavaScript)</h6>
+                    <div class="code-block">
+                        <div class="code-lang">JavaScript · Reassembly</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>// After user signs a Xaman SignIn challenge
+// xamanUuid and account come from the challenge poll response
+
+const res = await fetch(`${API}/materialize/${dnaAnchor}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        address:   account,      // wallet address from Xaman signing
+        xamanUuid: xamanUuid,    // UUID of the signed challenge payload
+        authType:  'xaman',
+        timestamp: Date.now()
+    })
+});
+
+const result = await res.json();
+if (result.success) {
+    // result.data contains the reassembled ISO 20022 XML
+    // It exists in RAM only. Purged when session closes.
+    console.log(result.data);
+}</pre>
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">Anchor validation (JavaScript)</h6>
+                    <div class="code-block">
+                        <div class="code-lang">JavaScript · Format Check</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>// Client-side format check only.
+// Engine signature verification requires the AIFS API.
+
+function isValidAnchorFormat(anchor) {
+    return typeof anchor === 'string' && /^[0-9A-F]{24}$/.test(anchor);
+}
+
+// HookParameterValue encoding
+function anchorToHookValue(anchor) {
+    return Array.from(anchor)
+        .map(c => c.charCodeAt(0).toString(16).padStart(2,'0').toUpperCase())
+        .join('');
+    // 24-char anchor becomes 48-char HookParameterValue
+}</pre>
+                    </div>
+
+                    <h6 class="mt-4 mb-2 fw-bold">curl: Shatter an ISO message</h6>
+                    <div class="code-block">
+                        <div class="code-lang">curl</div>
+                        <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                        <pre>curl -X POST https://api.aifs.dev/api/v1/liquify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "manifest": "&lt;?xml version=\"1.0\"?&gt;&lt;Document&gt;...&lt;/Document&gt;",
+    "originAddress": "rYourSenderWalletAddress",
+    "receiverAddress": "rYourReceiverWalletAddress",
+    "allowSenderReassembly": true
+  }'</pre>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="spec-footer">
+                <strong>ZPK Protocol Specification v1.0-pilot</strong><br>
+                AIFS Protocol Inc. &nbsp;·&nbsp; aifs.dev &nbsp;·&nbsp; April 2026<br>
+                Patent Pending &nbsp;·&nbsp; USPTO 19/551,805 &nbsp;·&nbsp; 19/560,251 &nbsp;·&nbsp; 19/564,384 &nbsp;·&nbsp; 64/040,051
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+'use strict';
+
+// Toggle section collapse
+function toggleSection(header) {
+    var body = header.nextElementSibling;
+    var icon = header.querySelector('.toggle-icon');
+    if (body.classList.contains('collapsed')) {
+        body.classList.remove('collapsed');
+        icon.className = 'bi bi-chevron-up toggle-icon';
+    } else {
+        body.classList.add('collapsed');
+        icon.className = 'bi bi-chevron-down toggle-icon';
+    }
+}
+
+// Copy code blocks
+function copyCode(btn) {
+    var pre = btn.nextElementSibling;
+    navigator.clipboard.writeText(pre.textContent).then(function() {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() {
+            btn.textContent = 'Copy';
+            btn.classList.remove('copied');
+        }, 2000);
+    });
+}
+
+// Sidebar active state on scroll
+var sections = document.querySelectorAll('.spec-section');
+var links    = document.querySelectorAll('.sidebar-link');
+
+window.addEventListener('scroll', function() {
+    var scrollY = window.scrollY + 100;
+    sections.forEach(function(section) {
+        if (section.offsetTop <= scrollY && section.offsetTop + section.offsetHeight > scrollY) {
+            links.forEach(function(l) { l.classList.remove('active'); });
+            var link = document.querySelector('.sidebar-link[href="#' + section.id + '"]');
+            if (link) link.classList.add('active');
+        }
+    });
+});
+</script>
+</body>
+</html>

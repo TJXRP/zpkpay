@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDK Reference · ZPKPay</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1f36'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='18' font-weight='900' text-anchor='middle' fill='%23e8960c'>Z</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --zpk-navy:  #1a1f36;
+    --zpk-orange: #e8960c;
+    --zpk-blue:  #008CFF;
+    --zpk-cream: #fdf4f0;
+    --zpk-muted: #6b7280;
+}
+body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--zpk-navy); margin: 0; font-size: 15px; }
+
+.zpk-nav {
+    background: var(--zpk-cream);
+    border-bottom: 3px solid var(--zpk-orange);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.zpk-logo { font-size: 20px; font-weight: 900; color: var(--zpk-navy); text-decoration: none; }
+.zpk-logo span { color: var(--zpk-orange); }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a { font-size: 14px; font-weight: 600; color: var(--zpk-navy); text-decoration: none; opacity: 0.7; }
+.nav-links a:hover, .nav-links a.active { opacity: 1; }
+
+.sdk-layout { display: flex; min-height: calc(100vh - 64px); }
+
+.sdk-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    background: #fff;
+    border-right: 1px solid #e2e8f0;
+    padding: 28px 0;
+}
+.sidebar-group { font-size: 11px; font-weight: 700; color: var(--zpk-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 16px 24px 6px; }
+.sidebar-link { display: block; padding: 7px 24px; font-size: 13px; color: #374151; text-decoration: none; border-left: 3px solid transparent; font-weight: 500; transition: all 0.15s; }
+.sidebar-link:hover, .sidebar-link.active { color: var(--zpk-blue); border-left-color: var(--zpk-blue); background: rgba(0,140,255,0.04); }
+
+.sdk-content { flex: 1; padding: 48px 56px 100px; max-width: 860px; }
+
+h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 12px; }
+h2 { font-size: 22px; font-weight: 700; margin-top: 56px; margin-bottom: 16px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+h2:first-of-type { border-top: none; margin-top: 32px; }
+h3 { font-size: 16px; font-weight: 700; margin-top: 32px; margin-bottom: 12px; color: var(--zpk-navy); }
+p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
+
+.lead { font-size: 17px; color: var(--zpk-muted); line-height: 1.7; margin-bottom: 32px; }
+
+.code-block {
+    background: var(--zpk-navy);
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 24px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    position: relative;
+    overflow-x: auto;
+    margin: 20px 0;
+}
+.code-block .comment { color: #6b7280; }
+.code-block .keyword { color: var(--zpk-orange); }
+.code-block .string  { color: #86efac; }
+.copy-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.5);
+    padding: 4px 10px; border-radius: 5px; font-size: 11px; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: all 0.15s;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+.param-table { width: 100%; border-collapse: collapse; margin: 20px 0 32px; font-size: 14px; }
+.param-table th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--zpk-muted); padding: 10px 14px; border-bottom: 2px solid #e2e8f0; }
+.param-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+.param-table tr:last-child td { border-bottom: none; }
+.param-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--zpk-navy); font-weight: 600; }
+.param-type { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--zpk-blue); }
+.badge-req { background: #fef3c7; color: #92400e; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+.badge-opt { background: #f1f5f9; color: var(--zpk-muted); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+
+.callout { background: rgba(232,150,12,0.08); border-left: 4px solid var(--zpk-orange); border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 24px 0; font-size: 14px; color: #374151; line-height: 1.6; }
+.callout strong { color: var(--zpk-navy); }
+
+.endpoint-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 5px; margin-right: 10px; }
+.method-post { background: #dcfce7; color: #166534; }
+.url-display { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--zpk-navy); }
+
+.hook-hash-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--zpk-navy);
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    word-break: break-all;
+    line-height: 1.8;
+    margin: 16px 0;
+}
+.hook-hash-display strong { color: var(--zpk-orange); }
+</style>
+</head>
+<body>
+
+<nav class="zpk-nav">
+    <a href="/" class="zpk-logo">ZPK<span>Pay</span></a>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="spec.html">Protocol spec</a>
+        <a href="sdk.html" class="active">SDK reference</a>
+        <a href="https://aifs.dev" target="_blank">Demo</a>
+    </div>
+</nav>
+
+<div class="sdk-layout">
+    <aside class="sdk-sidebar">
+        <div class="sidebar-group">Overview</div>
+        <a href="#intro" class="sidebar-link active">Introduction</a>
+        <a href="#base-url" class="sidebar-link">Base URL</a>
+
+        <div class="sidebar-group">API Endpoints</div>
+        <a href="#liquify" class="sidebar-link">POST /liquify</a>
+        <a href="#materialize" class="sidebar-link">POST /materialize</a>
+        <a href="#anchor-status" class="sidebar-link">POST /anchor-status</a>
+
+        <div class="sidebar-group">Hook Integration</div>
+        <a href="#hook" class="sidebar-link">ZPK-Enforcer Hook</a>
+        <a href="#hook-install" class="sidebar-link">Installation</a>
+        <a href="#hook-param" class="sidebar-link">HookParameter format</a>
+
+        <div class="sidebar-group">Reference</div>
+        <a href="#errors" class="sidebar-link">Error codes</a>
+        <a href="#dna" class="sidebar-link">DNA anchor format</a>
+    </aside>
+
+    <main class="sdk-content">
+
+        <section id="intro">
+            <h1>SDK Reference</h1>
+            <p class="lead">The ZPK API is a REST interface to the AIFS ShatterEngine. Your application calls these endpoints to shatter payloads, settle anchors on Xahau, and reassemble data for authorized parties.</p>
+
+            <div class="callout">
+                <strong>Engine boundary.</strong> The ShatterEngine is proprietary and never exposed. All endpoints return results only -- no engine internals are observable from the API layer.
+            </div>
+        </section>
+
+        <section id="base-url">
+            <h2>Base URL</h2>
+            <div class="code-block">https://api.aifs.dev/v1</div>
+            <p>All requests must use HTTPS. No authentication is required for the public demo API. Production pilots use an issued API key passed as <code>X-API-Key</code> header.</p>
+        </section>
+
+        <section id="liquify">
+            <h2>POST /liquify</h2>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/liquify</span></p>
+            <p>Shatters a payload into 1,024 entropic particles and returns a DNA anchor. The anchor is the only artifact your application needs to proceed to settlement.</p>
+
+            <h3>Request body</h3>
+            <table class="param-table">
+                <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">originAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Sender's Xahau/XRPL wallet address. Used as the XOR identity salt.</td></tr>
+                    <tr><td class="param-name">receiverAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Recipient's wallet address. Stored as a SHA-256 hash -- never as a raw address.</td></tr>
+                    <tr><td class="param-name">metadata</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The payload to shatter. Plain text, JSON string, or ISO 20022 XML string.</td></tr>
+                    <tr><td class="param-name">allowSenderReassembly</td><td class="param-type">boolean</td><td><span class="badge-opt">optional</span></td><td>If true, the sender may also reassemble the payload. Default: false.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Response</h3>
+            <table class="param-table">
+                <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td>24-character uppercase hex DNA anchor. Pass this to Xahau as the HookParameterValue.</td></tr>
+                    <tr><td class="param-name">status</td><td class="param-type">string</td><td>"shattered" on success.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="comment">// Request</span>
+fetch(<span class="string">'https://api.aifs.dev/v1/liquify'</span>, {
+  method: <span class="string">'POST'</span>,
+  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  body: JSON.stringify({
+    originAddress:   <span class="string">'rSenderWalletAddress...'</span>,
+    receiverAddress: <span class="string">'rReceiverWalletAddress...'</span>,
+    metadata:        <span class="string">'<?xml version="1.0"?>...'</span>,
+    allowSenderReassembly: <span class="keyword">true</span>
+  })
+});
+
+<span class="comment">// Response</span>
+{
+  <span class="string">"dna"</span>: <span class="string">"A3F8B2C91D4E7F60A1B2C3D4"</span>,
+  <span class="string">"status"</span>: <span class="string">"shattered"</span>
+}
+            </div>
+        </section>
+
+        <section id="materialize">
+            <h2>POST /materialize</h2>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/materialize</span></p>
+            <p>Reassembles a shattered payload for an authorized party. The engine verifies the wallet address against the stored identity salt and returns the original payload only if authorization passes.</p>
+
+            <h3>Request body</h3>
+            <table class="param-table">
+                <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The 24-character DNA anchor returned by /liquify.</td></tr>
+                    <tr><td class="param-name">walletAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The requesting party's wallet address. Must match sender or receiver.</td></tr>
+                    <tr><td class="param-name">role</td><td class="param-type">string</td><td><span class="badge-opt">optional</span></td><td>"sender" or "receiver". Defaults to "receiver".</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Response</h3>
+            <table class="param-table">
+                <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">payload</td><td class="param-type">string</td><td>The original payload as submitted to /liquify.</td></tr>
+                    <tr><td class="param-name">status</td><td class="param-type">string</td><td>"reassembled" on success.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
+  method: <span class="string">'POST'</span>,
+  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  body: JSON.stringify({
+    dna:           <span class="string">'A3F8B2C91D4E7F60A1B2C3D4'</span>,
+    walletAddress: <span class="string">'rReceiverWalletAddress...'</span>,
+    role:          <span class="string">'receiver'</span>
+  })
+});
+            </div>
+        </section>
+
+        <section id="anchor-status">
+            <h2>POST /anchor-status</h2>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/anchor-status</span></p>
+            <p>Checks whether a DNA anchor has been settled on Xahau and confirmed by the Hook. Use this to verify settlement before allowing reassembly in gated flows.</p>
+
+            <h3>Request body</h3>
+            <table class="param-table">
+                <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The DNA anchor to check.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="comment">// Response (settled)</span>
+{
+  <span class="string">"settled"</span>: <span class="keyword">true</span>,
+  <span class="string">"txid"</span>: <span class="string">"AB12CD34..."</span>,
+  <span class="string">"ledger"</span>: 1234567
+}
+
+<span class="comment">// Response (pending)</span>
+{
+  <span class="string">"settled"</span>: <span class="keyword">false</span>,
+  <span class="string">"txid"</span>: <span class="keyword">null</span>
+}
+            </div>
+        </section>
+
+        <section id="hook">
+            <h2>ZPK-Enforcer Hook</h2>
+            <p>The ZPK-Enforcer Hook is a Xahau Hook deployed on Mainnet. Install it on any Xahau receiving address to enforce that only payments carrying a valid ZPK DNA anchor are accepted.</p>
+
+            <div class="callout">
+                <strong>Hook live on Xahau Mainnet.</strong> SetHook transaction: <code>39249C41</code>. The Hook hash is publicly installable -- any Xahau address can use it.
+            </div>
+        </section>
+
+        <section id="hook-install">
+            <h2>Hook installation</h2>
+            <p>Install the Hook on your receiving address using the Xahau Hooks Builder or any Xahau-compatible SDK.</p>
+
+            <h3>Hook hash</h3>
+            <div class="hook-hash-display">
+                <strong>9D35CFCE2ACF4C59E15063AD09119AC4</strong>269EA1E11766F6A412D2B1443BDBBF6A
+            </div>
+
+            <h3>SetHook transaction (xrpl.js)</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+{
+  TransactionType: <span class="string">'SetHook'</span>,
+  Account: <span class="string">'rYourReceivingAddress...'</span>,
+  Hooks: [{
+    Hook: {
+      HookHash: <span class="string">'9D35CFCE2ACF4C59E15063AD09119AC4269EA1E11766F6A412D2B1443BDBBF6A'</span>,
+      HookOn:   <span class="string">'0000000000000000'</span>,
+      HookApiVersion: 0,
+      CreateCode: <span class="string">''</span>,
+      Flags: 1
+    }
+  }]
+}
+            </div>
+        </section>
+
+        <section id="hook-param">
+            <h2>HookParameter format</h2>
+            <p>Every payment to a ZPK-enforced address must include the DNA anchor as a HookParameter.</p>
+
+            <table class="param-table">
+                <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">HookParameterName</td><td><code>444E41</code> (hex encoding of "DNA")</td></tr>
+                    <tr><td class="param-name">HookParameterValue</td><td>DNA anchor hex-encoded to ASCII hex. Example: anchor <code>A3F8...</code> becomes <code>413346382E2E2E</code></td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="comment">// Build the HookParameter from a DNA anchor</span>
+<span class="keyword">const</span> dna = <span class="string">'A3F8B2C91D4E7F60A1B2C3D4'</span>;
+<span class="keyword">const</span> hookParamValue = Buffer.from(dna, <span class="string">'utf8'</span>).toString(<span class="string">'hex'</span>).toUpperCase();
+
+<span class="keyword">const</span> hookParameters = [{
+  HookParameter: {
+    HookParameterName:  <span class="string">'444E41'</span>,
+    HookParameterValue: hookParamValue
+  }
+}];
+            </div>
+        </section>
+
+        <section id="errors">
+            <h2>Error codes</h2>
+            <table class="param-table">
+                <thead><tr><th>Code</th><th>HTTP</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">ZPK_ANCHOR_INVALID</td><td>400</td><td>The DNA anchor failed engine signature verification. Rejected before Hook submission.</td></tr>
+                    <tr><td class="param-name">ZPK_NOT_AUTHORIZED</td><td>403</td><td>The wallet address does not match the sender or receiver stored for this anchor.</td></tr>
+                    <tr><td class="param-name">ZPK_NOT_FOUND</td><td>404</td><td>No particle set found for the provided DNA anchor.</td></tr>
+                    <tr><td class="param-name">ZPK_ALREADY_SETTLED</td><td>409</td><td>This anchor has already been settled on Xahau. Single-use replay protection enforced.</td></tr>
+                    <tr><td class="param-name">ZPK_ENGINE_ERROR</td><td>500</td><td>Internal engine error. Retry with exponential backoff.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="dna">
+            <h2>DNA anchor format</h2>
+            <p>Every DNA anchor is exactly 24 uppercase hex characters (96 bits).</p>
+
+            <div class="code-block">
+A 3 F 8 B 2 C 9 1 D 4 E 7 F 6 0 A 1 B 2 | C 3 D 4
+&lt;─────────── 20 chars ───────────────────&gt; &lt;─ 4 ─&gt;
+        SHA-256 particle hash                engine
+           (truncated)                      signature
+                                          (HMAC-SHA256)
+            </div>
+
+            <p>The last 4 characters are an HMAC-SHA256 engine signature. Any anchor submitted to the API that does not carry a valid engine signature is rejected with <code>ZPK_ANCHOR_INVALID</code> before it reaches the Hook.</p>
+        </section>
+
+    </main>
+</div>
+
+<script>
+function copyCode(btn) {
+    const block = btn.closest('.code-block');
+    const text = block.innerText.replace('copy\n','').replace('copied!\n','');
+    navigator.clipboard.writeText(text.trim()).then(() => {
+        btn.textContent = 'copied!';
+        setTimeout(() => btn.textContent = 'copy', 2000);
+    });
+}
+
+// Scroll spy
+const links = document.querySelectorAll('.sidebar-link');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            links.forEach(l => l.classList.remove('active'));
+            const match = document.querySelector(`.sidebar-link[href="#${e.target.id}"]`);
+            if (match) match.classList.add('active');
+        }
+    });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
