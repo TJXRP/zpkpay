@@ -124,68 +124,75 @@ body {
 
 /* ── Hero ── */
 .zpk-hero {
-    position: relative;
-    color: #fff;
-    padding: 130px 40px 110px;
+    background: var(--zpk-cream);
+    padding: 80px 40px 72px;
     text-align: center;
-    overflow: hidden;
 }
-.zpk-hero-bg {
-    position: absolute;
-    inset: 0;
-    background: url('img/hero-bkg-1-bkg.jpg') center center / cover no-repeat;
-    z-index: 0;
-}
-.zpk-hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(10, 12, 28, 0.62);
-    z-index: 1;
-}
-.zpk-hero-content {
-    position: relative;
-    z-index: 2;
+.hero-eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--zpk-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 20px;
 }
 .hero-title {
-    font-size: clamp(40px, 5.5vw, 72px);
-    font-weight: 900;
-    line-height: 1.08;
-    margin-bottom: 24px;
-    letter-spacing: -0.025em;
+    font-size: clamp(28px, 3.5vw, 48px);
+    font-weight: 800;
+    color: var(--zpk-navy);
+    line-height: 1.12;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
 }
-.hero-title span { color: var(--zpk-orange); }
-.hero-sub {
-    font-size: 19px;
-    color: rgba(255,255,255,0.7);
-    max-width: 560px;
-    margin: 0 auto 44px;
-    line-height: 1.6;
+.hero-lineage {
+    max-width: 780px;
+    margin: 0 auto 20px;
+    font-size: 15px;
+    color: #4b5563;
+    line-height: 1.7;
+    font-style: italic;
+}
+.hero-timeline {
+    max-width: 860px;
+    margin: 0 auto 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #374151;
+    line-height: 2;
+}
+.hero-timeline .era { display: inline; }
+.hero-timeline .era-final { color: var(--zpk-navy); font-weight: 700; }
+.hero-timeline .arrow { color: var(--zpk-muted); padding: 0 4px; }
+.hero-closing {
+    font-size: 17px;
+    color: var(--zpk-navy);
+    font-weight: 500;
+    margin-bottom: 40px;
 }
 .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 .btn-zpk-primary {
-    background: var(--zpk-orange);
+    background: var(--zpk-navy);
     color: #fff;
     border: none;
-    padding: 14px 32px;
-    border-radius: 10px;
+    padding: 13px 30px;
+    border-radius: 8px;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     text-decoration: none;
     transition: opacity 0.15s;
 }
-.btn-zpk-primary:hover { opacity: 0.9; color: #fff; }
+.btn-zpk-primary:hover { opacity: 0.8; color: #fff; }
 .btn-zpk-outline {
     background: transparent;
-    color: #fff;
-    border: 2px solid rgba(255,255,255,0.25);
-    padding: 14px 32px;
-    border-radius: 10px;
+    color: var(--zpk-navy);
+    border: 1.5px solid rgba(26,31,54,0.3);
+    padding: 13px 30px;
+    border-radius: 8px;
     font-size: 15px;
     font-weight: 600;
     text-decoration: none;
     transition: border-color 0.15s;
 }
-.btn-zpk-outline:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+.btn-zpk-outline:hover { border-color: var(--zpk-navy); color: var(--zpk-navy); }
 
 /* ── How it works ── */
 .section-label {
@@ -373,12 +380,6 @@ body {
 </head>
 <body>
 
-<!-- Timeline strip -->
-<div class="zpk-timeline">
-    From Barriers to Armor to Privacy... to Entropic Dispersal and Reassembly<br>
-    Password-Based Access Control (1970s-1980s) &rarr; Perimeter Defenses &amp; Antivirus (1990s-2000s) &rarr; End-to-End Encryption (2000s-2020s) &rarr; <strong>Zero Persistent Knowledge (ZPK&trade;) (2026-&infin;)</strong>
-</div>
-
 <!-- Nav -->
 <nav class="zpk-nav">
     <a href="/" class="zpk-logo">ZPK<span>Pay</span></a>
@@ -393,20 +394,22 @@ body {
 
 <!-- Hero -->
 <section class="zpk-hero">
-    <div class="zpk-hero-bg"></div>
-    <div class="zpk-hero-overlay"></div>
-    <div class="zpk-hero-content">
-        <h1 class="hero-title">
-            Your data doesn't exist<br>
-            <span>until you need it.</span>
-        </h1>
-        <p class="hero-sub">
-            ZPK is an open protocol for payment privacy. Open SDK. Our private engine.
-        </p>
-        <div class="hero-actions">
-            <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
-            <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
-        </div>
+    <p class="hero-eyebrow">The Evolution of Computer Security</p>
+    <h1 class="hero-title">From Barriers to Armor to Privacy...<br>to Entropic Dispersal and Reassembly</h1>
+    <p class="hero-lineage">Each era made data harder to reach. ZPK makes it not exist.</p>
+    <div class="hero-timeline">
+        <span class="era">Password-Based Access Control (1970s-1980s)</span>
+        <span class="arrow">&rarr;</span>
+        <span class="era">Perimeter Defenses &amp; Antivirus (1990s-2000s)</span>
+        <span class="arrow">&rarr;</span>
+        <span class="era">End-to-End Encryption (2000s-2020s)</span>
+        <span class="arrow">&rarr;</span>
+        <span class="era era-final">Zero Persistent Knowledge (ZPK&trade;) (2026-&infin;)</span>
+    </div>
+    <p class="hero-closing">ZPK is an open protocol SDK for payment privacy. The engine remains ours.</p>
+    <div class="hero-actions">
+        <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
+        <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
     </div>
 </section>
 
