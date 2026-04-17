@@ -88,7 +88,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 .copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
 .param-table { width: 100%; border-collapse: collapse; margin: 20px 0 32px; font-size: 14px; }
-.param-table th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--zpk-muted); padding: 10px 14px; border-bottom: 2px solid #e2e8f0; }
+.param-table th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--zpk-muted); padding: 10px 14px; border-bottom: 2px solid #e2e8f0; }
 .param-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
 .param-table tr:last-child td { border-bottom: none; }
 .param-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--zpk-navy); font-weight: 600; }
@@ -99,9 +99,27 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 .callout { background: rgba(232,150,12,0.08); border: 1px solid rgba(232,150,12,0.25); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 14px; color: #374151; line-height: 1.6; }
 .callout strong { color: var(--zpk-navy); }
 
+.callout-info { background: rgba(0,140,255,0.06); border: 1px solid rgba(0,140,255,0.2); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 14px; color: #374151; line-height: 1.6; }
+.callout-info strong { color: var(--zpk-navy); }
+
 .endpoint-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 5px; margin-right: 10px; }
 .method-post { background: #dcfce7; color: #166534; }
 .url-display { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--zpk-navy); }
+
+.fn-sig {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--zpk-navy);
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 0 0 24px;
+    display: block;
+}
+.fn-sig .fn-name { color: var(--zpk-blue); }
+.fn-sig .fn-param { color: #374151; }
+.fn-sig .fn-type { color: var(--zpk-orange); }
 
 .hook-hash-display {
     font-family: 'JetBrains Mono', monospace;
@@ -115,6 +133,13 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     margin: 16px 0;
 }
 .hook-hash-display strong { color: var(--zpk-orange); }
+
+@media (max-width: 768px) {
+    .sdk-sidebar { display: none; }
+    .sdk-content { padding: 32px 20px 80px; }
+    .zpk-nav { padding: 0 20px; }
+    .nav-links { gap: 16px; }
+}
 </style>
 </head>
 <body>
@@ -133,11 +158,17 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     <aside class="sdk-sidebar">
         <div class="sidebar-group">Overview</div>
         <a href="#intro" class="sidebar-link active">Introduction</a>
-        <a href="#base-url" class="sidebar-link">Base URL</a>
+        <a href="#quickstart" class="sidebar-link">Quick start</a>
 
-        <div class="sidebar-group">API Endpoints</div>
+        <div class="sidebar-group">SDK</div>
+        <a href="#shatter" class="sidebar-link">zpk.shatter()</a>
+        <a href="#materialize" class="sidebar-link">zpk.materialize()</a>
+        <a href="#verify" class="sidebar-link">zpk.verify()</a>
+
+        <div class="sidebar-group">Advanced — Raw API</div>
+        <a href="#base-url" class="sidebar-link">Base URL</a>
         <a href="#liquify" class="sidebar-link">POST /liquify</a>
-        <a href="#materialize" class="sidebar-link">POST /materialize</a>
+        <a href="#materialize-raw" class="sidebar-link">POST /materialize</a>
         <a href="#anchor-status" class="sidebar-link">POST /anchor-status</a>
 
         <div class="sidebar-group">Hook Integration</div>
@@ -152,34 +183,222 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 
     <main class="sdk-content">
 
+        <!-- ── Introduction ── -->
         <section id="intro">
             <h1>SDK Reference</h1>
-            <p class="lead">The ZPK API is a REST interface to the AIFS ShatterEngine. Your application calls these endpoints to shatter payloads, settle anchors on Xahau, and reassemble data for authorized parties.</p>
+            <p class="lead">One script tag. Two functions. The entire ZPK protocol — shatter, settle, and reassemble ISO 20022 messages — without exposing any plaintext to the server.</p>
 
             <div class="callout">
-                <strong>Engine boundary.</strong> The ShatterEngine is proprietary and never exposed. All endpoints return results only -- no engine internals are observable from the API layer.
+                <strong>Engine boundary.</strong> The ShatterEngine is proprietary and server-side only. <code>zpk.js</code> scrambles your payload locally before it leaves the browser. The server processes noise, not plaintext. Ever.
             </div>
         </section>
 
+        <!-- ── Quick start ── -->
+        <section id="quickstart">
+            <h2>Quick start</h2>
+            <p>Drop one script tag into your page. That's the install.</p>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+&lt;<span class="keyword">script</span> src=<span class="string">"https://zpkpay.com/zpk.js"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+            </div>
+
+            <p>Then use two functions for the entire protocol lifecycle:</p>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="comment">// Sender — shatter and get a DNA anchor</span>
+<span class="keyword">const</span> dna = <span class="keyword">await</span> zpk.shatter(isoMessage, senderWalletAddress);
+
+<span class="comment">// Receiver — materialize the original payload</span>
+<span class="keyword">const</span> iso = <span class="keyword">await</span> zpk.materialize(dna, receiverWalletAddress);
+            </div>
+
+            <p>The DNA anchor is a 24-character hex string. Pass it to Xahau as the HookParameterValue to enforce settlement before reassembly. The receiver's wallet must match the identity stored at shatter time — any other address gets <code>IDENTITY_MISMATCH</code>.</p>
+        </section>
+
+        <!-- ── zpk.shatter() ── -->
+        <section id="shatter">
+            <h2>zpk.shatter()</h2>
+            <code class="fn-sig">
+                <span class="fn-name">zpk.shatter</span>(<span class="fn-param">payload</span>, <span class="fn-param">walletAddress</span>, <span class="fn-param">[options]</span>) → <span class="fn-type">Promise&lt;string&gt;</span>
+            </code>
+
+            <p>Scrambles <code>payload</code> locally using a key derived from <code>walletAddress</code>, then sends the scrambled noise to the ShatterEngine. Returns a DNA anchor — a 24-character hex string used for settlement and reassembly.</p>
+
+            <h3>Parameters</h3>
+            <table class="param-table">
+                <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="param-name">payload</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-req">required</span></td>
+                        <td>ISO 20022 XML or any string payload. Scrambled in the browser before transmission.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">walletAddress</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-req">required</span></td>
+                        <td>Sender's XRPL/Xahau wallet address. Used as the entropy source for local scrambling.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">options.receiverAddress</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-opt">optional</span></td>
+                        <td>Receiver's wallet address. If omitted, defaults to the sender address.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">options.allowSenderReassembly</td>
+                        <td class="param-type">boolean</td>
+                        <td><span class="badge-opt">optional</span></td>
+                        <td>If <code>false</code>, only the receiver may materialize. Default: <code>true</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Returns</h3>
+            <p>A <code>Promise</code> that resolves to a 24-character uppercase hex DNA anchor string (e.g. <code>"A3F8B2C91D4E7F60A1B2C3D4"</code>). Throws on network error or engine rejection.</p>
+
+            <h3>Example</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="keyword">const</span> isoXml = <span class="string">`&lt;?xml version="1.0"?&gt;
+&lt;Document&gt;
+  &lt;CdtTrfInitn&gt;
+    &lt;PmtInf&gt;...&lt;/PmtInf&gt;
+  &lt;/CdtTrfInitn&gt;
+&lt;/Document&gt;`</span>;
+
+<span class="keyword">const</span> dna = <span class="keyword">await</span> zpk.shatter(isoXml, <span class="string">'rSenderWallet...'</span>, {
+  receiverAddress:       <span class="string">'rReceiverWallet...'</span>,
+  allowSenderReassembly: <span class="keyword">true</span>
+});
+
+console.log(dna); <span class="comment">// "A3F8B2C91D4E7F60A1B2C3D4"</span>
+<span class="comment">// Pass `dna` to Xahau as the HookParameterValue</span>
+            </div>
+        </section>
+
+        <!-- ── zpk.materialize() ── -->
+        <section id="materialize">
+            <h2>zpk.materialize()</h2>
+            <code class="fn-sig">
+                <span class="fn-name">zpk.materialize</span>(<span class="fn-param">dna</span>, <span class="fn-param">walletAddress</span>, <span class="fn-param">[options]</span>) → <span class="fn-type">Promise&lt;string&gt;</span>
+            </code>
+
+            <p>Fetches the scrambled noise for a DNA anchor, then unscrambles it locally using the key derived from <code>walletAddress</code>. The server returns noise — never plaintext. Unscrambling happens in the browser.</p>
+
+            <h3>Parameters</h3>
+            <table class="param-table">
+                <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="param-name">dna</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-req">required</span></td>
+                        <td>DNA anchor returned by <code>zpk.shatter()</code>.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">walletAddress</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-req">required</span></td>
+                        <td>Authorized wallet address (sender or receiver). Must match the identity stored at shatter time.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">options.authType</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-opt">optional</span></td>
+                        <td><code>"wallet"</code> or <code>"xaman"</code>. Default: <code>"wallet"</code>.</td>
+                    </tr>
+                    <tr>
+                        <td class="param-name">options.xamanUuid</td>
+                        <td class="param-type">string</td>
+                        <td><span class="badge-opt">optional</span></td>
+                        <td>Xaman session UUID. Required when <code>authType</code> is <code>"xaman"</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Returns</h3>
+            <p>A <code>Promise</code> that resolves to the original plaintext payload — the same string passed to <code>zpk.shatter()</code>. Throws if the wallet is not authorized or the DNA anchor is not found.</p>
+
+            <h3>Example</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+<span class="comment">// Receiver materializes using their wallet</span>
+<span class="keyword">try</span> {
+  <span class="keyword">const</span> iso = <span class="keyword">await</span> zpk.materialize(dna, <span class="string">'rReceiverWallet...'</span>);
+  console.log(iso); <span class="comment">// original ISO 20022 XML</span>
+} <span class="keyword">catch</span> (err) {
+  <span class="keyword">if</span> (err.message === <span class="string">'Wallet not authorized for this record.'</span>) {
+    <span class="comment">// identity mismatch</span>
+  }
+}
+
+<span class="comment">// With Xaman auth</span>
+<span class="keyword">const</span> iso = <span class="keyword">await</span> zpk.materialize(dna, <span class="string">'rReceiverWallet...'</span>, {
+  authType:  <span class="string">'xaman'</span>,
+  xamanUuid: xamanSession.uuid
+});
+            </div>
+
+            <h3>Error messages</h3>
+            <table class="param-table">
+                <thead><tr><th>Message</th><th>Cause</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">Wallet not authorized for this record.</td><td>The wallet address does not match the sender or receiver stored for this DNA anchor.</td></tr>
+                    <tr><td class="param-name">Only the receiver can materialize this record.</td><td><code>allowSenderReassembly</code> was <code>false</code> at shatter time and the sender address was provided.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ── zpk.verify() ── -->
+        <section id="verify">
+            <h2>zpk.verify()</h2>
+            <code class="fn-sig">
+                <span class="fn-name">zpk.verify</span>(<span class="fn-param">dna</span>) → <span class="fn-type">boolean</span>
+            </code>
+
+            <p>Validates the format of a DNA anchor. Checks that <code>dna</code> is a 24-character uppercase hex string. Does not hit the API.</p>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+zpk.verify(<span class="string">'A3F8B2C91D4E7F60A1B2C3D4'</span>); <span class="comment">// true</span>
+zpk.verify(<span class="string">'invalid'</span>);                   <span class="comment">// false</span>
+zpk.verify(<span class="string">'a3f8b2c91d4e7f60a1b2c3d4'</span>); <span class="comment">// false (lowercase)</span>
+            </div>
+
+            <p>Use this as a client-side guard before submitting a DNA anchor to Xahau as a HookParameter.</p>
+        </section>
+
+        <!-- ── Advanced / Raw API ── -->
         <section id="base-url">
-            <h2>Base URL</h2>
-            <div class="code-block">https://api.aifs.dev/v1</div>
-            <p>All requests must use HTTPS. No authentication is required for the public demo API. Production pilots use an issued API key passed as <code>X-API-Key</code> header.</p>
+            <h2>Advanced — Raw API</h2>
+            <p>The sections below document the raw HTTP endpoints that <code>zpk.js</code> calls internally. Use these directly only if you need server-side integration (Node.js, Python, etc.) or a language without a native SDK.</p>
+
+            <div class="callout-info">
+                <strong>Note on field names.</strong> The raw API uses <code>manifest</code> for the payload field (not <code>metadata</code>). If you use <code>zpk.js</code>, this is handled for you automatically.
+            </div>
+
+            <h3>Base URL</h3>
+            <div class="code-block">https://api.aifs.dev/api/v1</div>
+            <p>All requests must use HTTPS. Production pilots use an issued API key passed as the <code>X-AIFS-KEY</code> header.</p>
         </section>
 
         <section id="liquify">
             <h2>POST /liquify</h2>
-            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/liquify</span></p>
-            <p>Shatters a payload into 1,024 entropic particles and returns a DNA anchor. The anchor is the only artifact your application needs to proceed to settlement.</p>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/api/v1/liquify</span></p>
+            <p>Shatters a scrambled payload into 1,024 entropic particles and returns a DNA anchor. Submit a pre-scrambled manifest — never raw plaintext.</p>
 
             <h3>Request body</h3>
             <table class="param-table">
                 <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td class="param-name">originAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Sender's Xahau/XRPL wallet address. Used as the XOR identity salt.</td></tr>
-                    <tr><td class="param-name">receiverAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Recipient's wallet address. Stored as a SHA-256 hash -- never as a raw address.</td></tr>
-                    <tr><td class="param-name">metadata</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The payload to shatter. Plain text, JSON string, or ISO 20022 XML string.</td></tr>
-                    <tr><td class="param-name">allowSenderReassembly</td><td class="param-type">boolean</td><td><span class="badge-opt">optional</span></td><td>If true, the sender may also reassemble the payload. Default: false.</td></tr>
+                    <tr><td class="param-name">manifest</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The pre-scrambled payload (base64). Never submit raw plaintext.</td></tr>
+                    <tr><td class="param-name">originAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Sender's wallet address.</td></tr>
+                    <tr><td class="param-name">receiverAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>Receiver's wallet address. Stored as a SHA-256 hash — never as a raw address.</td></tr>
+                    <tr><td class="param-name">allowSenderReassembly</td><td class="param-type">boolean</td><td><span class="badge-opt">optional</span></td><td>If <code>true</code>, the sender may also reassemble. Default: <code>true</code>.</td></tr>
                 </tbody>
             </table>
 
@@ -187,45 +406,46 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
             <table class="param-table">
                 <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td>24-character uppercase hex DNA anchor. Pass this to Xahau as the HookParameterValue.</td></tr>
-                    <tr><td class="param-name">status</td><td class="param-type">string</td><td>"shattered" on success.</td></tr>
+                    <tr><td class="param-name">success</td><td class="param-type">boolean</td><td><code>true</code> on success.</td></tr>
+                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td>24-character uppercase hex DNA anchor. Pass to Xahau as the HookParameterValue.</td></tr>
                 </tbody>
             </table>
 
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">copy</button>
 <span class="comment">// Request</span>
-fetch(<span class="string">'https://api.aifs.dev/v1/liquify'</span>, {
+fetch(<span class="string">'https://api.aifs.dev/api/v1/liquify'</span>, {
   method: <span class="string">'POST'</span>,
-  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>, <span class="string">'X-AIFS-KEY'</span>: <span class="string">'your-key'</span> },
   body: JSON.stringify({
-    originAddress:   <span class="string">'rSenderWalletAddress...'</span>,
-    receiverAddress: <span class="string">'rReceiverWalletAddress...'</span>,
-    metadata:        <span class="string">'<?xml version="1.0"?>...'</span>,
+    manifest:              scrambledBase64,
+    originAddress:         <span class="string">'rSenderWallet...'</span>,
+    receiverAddress:       <span class="string">'rReceiverWallet...'</span>,
     allowSenderReassembly: <span class="keyword">true</span>
   })
 });
 
 <span class="comment">// Response</span>
 {
-  <span class="string">"dna"</span>: <span class="string">"A3F8B2C91D4E7F60A1B2C3D4"</span>,
-  <span class="string">"status"</span>: <span class="string">"shattered"</span>
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"dna"</span>: <span class="string">"A3F8B2C91D4E7F60A1B2C3D4"</span>
 }
             </div>
         </section>
 
-        <section id="materialize">
-            <h2>POST /materialize</h2>
-            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/materialize</span></p>
-            <p>Reassembles a shattered payload for an authorized party. The engine verifies the wallet address against the stored identity salt and returns the original payload only if authorization passes.</p>
+        <section id="materialize-raw">
+            <h2>POST /materialize/:dna</h2>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/api/v1/materialize/:dna</span></p>
+            <p>Returns the scrambled noise for an authorized wallet. Unscrambling must be performed client-side — the server never returns plaintext.</p>
 
             <h3>Request body</h3>
             <table class="param-table">
                 <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td class="param-name">dna</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The 24-character DNA anchor returned by /liquify.</td></tr>
-                    <tr><td class="param-name">walletAddress</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The requesting party's wallet address. Must match sender or receiver.</td></tr>
-                    <tr><td class="param-name">role</td><td class="param-type">string</td><td><span class="badge-opt">optional</span></td><td>"sender" or "receiver". Defaults to "receiver".</td></tr>
+                    <tr><td class="param-name">address</td><td class="param-type">string</td><td><span class="badge-req">required</span></td><td>The requesting party's wallet address. Must match sender or receiver.</td></tr>
+                    <tr><td class="param-name">authType</td><td class="param-type">string</td><td><span class="badge-opt">optional</span></td><td><code>"wallet"</code> or <code>"xaman"</code>. Default: <code>"wallet"</code>.</td></tr>
+                    <tr><td class="param-name">xamanUuid</td><td class="param-type">string</td><td><span class="badge-opt">optional</span></td><td>Xaman session UUID when <code>authType</code> is <code>"xaman"</code>.</td></tr>
+                    <tr><td class="param-name">timestamp</td><td class="param-type">number</td><td><span class="badge-opt">optional</span></td><td>Unix ms timestamp for replay protection.</td></tr>
                 </tbody>
             </table>
 
@@ -233,20 +453,20 @@ fetch(<span class="string">'https://api.aifs.dev/v1/liquify'</span>, {
             <table class="param-table">
                 <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td class="param-name">payload</td><td class="param-type">string</td><td>The original payload as submitted to /liquify.</td></tr>
-                    <tr><td class="param-name">status</td><td class="param-type">string</td><td>"reassembled" on success.</td></tr>
+                    <tr><td class="param-name">success</td><td class="param-type">boolean</td><td><code>true</code> on success.</td></tr>
+                    <tr><td class="param-name">data</td><td class="param-type">string</td><td>The scrambled manifest (base64). Unscramble locally to get plaintext.</td></tr>
                 </tbody>
             </table>
 
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">copy</button>
-fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
+fetch(<span class="string">`https://api.aifs.dev/api/v1/materialize/${dna}`</span>, {
   method: <span class="string">'POST'</span>,
-  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>, <span class="string">'X-AIFS-KEY'</span>: <span class="string">'your-key'</span> },
   body: JSON.stringify({
-    dna:           <span class="string">'A3F8B2C91D4E7F60A1B2C3D4'</span>,
-    walletAddress: <span class="string">'rReceiverWalletAddress...'</span>,
-    role:          <span class="string">'receiver'</span>
+    address:   <span class="string">'rReceiverWallet...'</span>,
+    authType:  <span class="string">'wallet'</span>,
+    timestamp: Date.now()
   })
 });
             </div>
@@ -254,8 +474,8 @@ fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
 
         <section id="anchor-status">
             <h2>POST /anchor-status</h2>
-            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/v1/anchor-status</span></p>
-            <p>Checks whether a DNA anchor has been settled on Xahau and confirmed by the Hook. Use this to verify settlement before allowing reassembly in gated flows.</p>
+            <p><span class="endpoint-badge method-post">POST</span><span class="url-display">https://api.aifs.dev/api/v1/anchor-status</span></p>
+            <p>Checks whether a DNA anchor has been settled on Xahau and confirmed by the Hook. Use this to gate reassembly on confirmed settlement.</p>
 
             <h3>Request body</h3>
             <table class="param-table">
@@ -270,24 +490,25 @@ fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
 <span class="comment">// Response (settled)</span>
 {
   <span class="string">"settled"</span>: <span class="keyword">true</span>,
-  <span class="string">"txid"</span>: <span class="string">"AB12CD34..."</span>,
-  <span class="string">"ledger"</span>: 1234567
+  <span class="string">"txid"</span>:    <span class="string">"AB12CD34..."</span>,
+  <span class="string">"ledger"</span>:  1234567
 }
 
 <span class="comment">// Response (pending)</span>
 {
   <span class="string">"settled"</span>: <span class="keyword">false</span>,
-  <span class="string">"txid"</span>: <span class="keyword">null</span>
+  <span class="string">"txid"</span>:    <span class="keyword">null</span>
 }
             </div>
         </section>
 
+        <!-- ── Hook Integration ── -->
         <section id="hook">
             <h2>ZPK-Enforcer Hook</h2>
-            <p>The ZPK-Enforcer Hook is a Xahau Hook deployed on Mainnet. Install it on any Xahau receiving address to enforce that only payments carrying a valid ZPK DNA anchor are accepted.</p>
+            <p>The ZPK-Enforcer Hook is deployed on Xahau Mainnet. Install it on any Xahau receiving address to enforce that only payments carrying a valid ZPK DNA anchor are accepted.</p>
 
             <div class="callout">
-                <strong>Hook live on Xahau Mainnet.</strong> SetHook transaction: <code>39249C41</code>. The Hook hash is publicly installable -- any Xahau address can use it.
+                <strong>Hook live on Xahau Mainnet.</strong> SetHook transaction: <code>39249C41</code>. The Hook hash is publicly installable — any Xahau address can use it.
             </div>
         </section>
 
@@ -308,11 +529,11 @@ fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
   Account: <span class="string">'rYourReceivingAddress...'</span>,
   Hooks: [{
     Hook: {
-      HookHash: <span class="string">'9D35CFCE2ACF4C59E15063AD09119AC4269EA1E11766F6A412D2B1443BDBBF6A'</span>,
-      HookOn:   <span class="string">'0000000000000000'</span>,
+      HookHash:       <span class="string">'9D35CFCE2ACF4C59E15063AD09119AC4269EA1E11766F6A412D2B1443BDBBF6A'</span>,
+      HookOn:         <span class="string">'0000000000000000'</span>,
       HookApiVersion: 0,
-      CreateCode: <span class="string">''</span>,
-      Flags: 1
+      CreateCode:     <span class="string">''</span>,
+      Flags:          1
     }
   }]
 }
@@ -346,15 +567,17 @@ fetch(<span class="string">'https://api.aifs.dev/v1/materialize'</span>, {
             </div>
         </section>
 
+        <!-- ── Reference ── -->
         <section id="errors">
             <h2>Error codes</h2>
             <table class="param-table">
                 <thead><tr><th>Code</th><th>HTTP</th><th>Description</th></tr></thead>
                 <tbody>
                     <tr><td class="param-name">ZPK_ANCHOR_INVALID</td><td>400</td><td>The DNA anchor failed engine signature verification. Rejected before Hook submission.</td></tr>
-                    <tr><td class="param-name">ZPK_NOT_AUTHORIZED</td><td>403</td><td>The wallet address does not match the sender or receiver stored for this anchor.</td></tr>
+                    <tr><td class="param-name">IDENTITY_MISMATCH</td><td>403</td><td>The wallet address does not match the sender or receiver stored for this anchor.</td></tr>
+                    <tr><td class="param-name">SENDER_REASSEMBLY_DISABLED</td><td>403</td><td><code>allowSenderReassembly</code> was <code>false</code> — only the receiver may materialize.</td></tr>
                     <tr><td class="param-name">ZPK_NOT_FOUND</td><td>404</td><td>No particle set found for the provided DNA anchor.</td></tr>
-                    <tr><td class="param-name">ZPK_ALREADY_SETTLED</td><td>409</td><td>This anchor has already been settled on Xahau. Single-use replay protection enforced.</td></tr>
+                    <tr><td class="param-name">ZPK_ALREADY_SETTLED</td><td>409</td><td>This anchor has already been settled. Single-use replay protection enforced.</td></tr>
                     <tr><td class="param-name">ZPK_ENGINE_ERROR</td><td>500</td><td>Internal engine error. Retry with exponential backoff.</td></tr>
                 </tbody>
             </table>
@@ -372,7 +595,9 @@ A 3 F 8 B 2 C 9 1 D 4 E 7 F 6 0 A 1 B 2 | C 3 D 4
                                           (HMAC-SHA256)
             </div>
 
-            <p>The last 4 characters are an HMAC-SHA256 engine signature. Any anchor submitted to the API that does not carry a valid engine signature is rejected with <code>ZPK_ANCHOR_INVALID</code> before it reaches the Hook.</p>
+            <p>The last 4 characters are an HMAC-SHA256 engine signature. Any anchor that does not carry a valid engine signature is rejected with <code>ZPK_ANCHOR_INVALID</code> before it reaches the Hook.</p>
+
+            <p>Use <code>zpk.verify(dna)</code> to validate format client-side before submitting to Xahau.</p>
         </section>
 
     </main>
