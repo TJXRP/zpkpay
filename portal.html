@@ -805,7 +805,7 @@ select.field-input { cursor: pointer; }
                     <span class="receipt-row-val green">ZPK&trade; &ndash; Hooks Enforced Message</span>
                 </div>
             </div>
-            <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
+            <a class="btn-recover" id="btn-recover" href="https://zpkpay.com/recover-xahau.html" target="_blank">
                 Recover ISO Message
                 <span class="btn-recover-tip" data-tip="Anyone with the anchor AND authorization can reassemble the message through the AIFS reassembly endpoint.">?</span>
             </a>
@@ -1229,7 +1229,7 @@ function showReceipt(txid) {
     }
     // Wire recover button with DNA anchor, sender role, and txid pre-filled
     if (dnaAnchor) {
-        var recoverUrl = 'https://aifs.dev/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
+        var recoverUrl = 'https://zpkpay.com/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
         if (txid) recoverUrl += '&txid=' + txid;
         document.getElementById('btn-recover').href = recoverUrl;
     }
