@@ -1,3 +1,23 @@
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   RULE #1 — MOBILE FIRST. ALWAYS. NO EXCEPTIONS.                ║
+║                                                                  ║
+║   Every layout change, every font size, every padding value,     ║
+║   every new section — mobile is the source of truth.            ║
+║   Desktop is an enhancement. Mobile is the requirement.          ║
+║                                                                  ║
+║   Breakpoints:                                                   ║
+║     Mobile  — max-width: 768px   (design starts here)           ║
+║     Tablet  — max-width: 1024px                                  ║
+║     Desktop — anything above 1024px                              ║
+║                                                                  ║
+║   Never add a desktop layout without a mobile media query.       ║
+║   Never use fixed widths that break at 375px.                    ║
+║   Never set font sizes below 15px on any visible element.        ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,30 +163,38 @@ body {
     margin-bottom: 20px;
     letter-spacing: -0.02em;
 }
-.hero-lineage {
-    max-width: 780px;
-    font-size: 15px;
-    color: #4b5563;
-    line-height: 1.7;
-    font-style: italic;
-    margin-bottom: 20px;
-}
 .hero-timeline {
-    max-width: 860px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
+    font-size: 17px;
+    font-weight: 700;
     color: #374151;
-    line-height: 2;
+    white-space: nowrap;
+    overflow-x: auto;
+    line-height: 1.8;
     margin-bottom: 36px;
 }
-.hero-timeline .era { display: inline; }
-.hero-timeline .era-final { color: var(--zpk-navy); font-weight: 700; }
-.hero-timeline .arrow { color: var(--zpk-muted); padding: 0 4px; }
+.hero-timeline .era-final { color: var(--zpk-navy); }
+.hero-timeline .arrow { color: var(--zpk-muted); padding: 0 6px; }
 .hero-closing {
-    font-size: 17px;
+    font-size: 22px;
+    font-weight: 650;
     color: var(--zpk-navy);
-    font-weight: 500;
+    text-align: center;
     margin-bottom: 0;
+}
+
+/* ── Mobile first ── */
+@media (max-width: 768px) {
+    .zpk-hero {
+        padding: 48px 24px 56px 24px;
+    }
+    .hero-timeline {
+        font-size: 15px;
+        white-space: normal;
+    }
+    .hero-closing {
+        font-size: 18px;
+    }
 }
 .btn-zpk-primary {
     background: var(--zpk-navy);
@@ -395,7 +423,6 @@ body {
 <section class="zpk-hero">
     <p class="hero-eyebrow">The Evolution of Computer Security</p>
     <h1 class="hero-title">From Barriers to Armor to Privacy...<br>to Entropic Dispersal and Reassembly</h1>
-    <p class="hero-lineage">Each era made data harder to reach. ZPK makes it not exist.</p>
     <div class="hero-timeline">
         <span class="era">Password-Based Access Control (1970s-1980s)</span>
         <span class="arrow">&rarr;</span>
