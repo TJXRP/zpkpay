@@ -27,6 +27,61 @@ body {
     margin: 0;
 }
 
+/* ── Timeline strip ── */
+.zpk-timeline {
+    background: var(--zpk-navy);
+    color: rgba(255,255,255,0.55);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 10px 40px;
+    text-align: center;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+}
+.zpk-timeline strong { color: var(--zpk-orange); font-weight: 600; }
+
+/* ── Video section ── */
+.zpk-video-section {
+    background: #0a0c1c;
+    padding: 72px 40px;
+    text-align: center;
+}
+.zpk-video-section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 32px;
+    letter-spacing: -0.01em;
+}
+.video-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #1a1f36;
+}
+.video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+}
+.video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 14px;
+    gap: 12px;
+}
+.video-placeholder i { font-size: 48px; color: var(--zpk-orange); opacity: 0.5; }
+
 /* ── Nav ── */
 .zpk-nav {
     background: var(--zpk-cream);
@@ -318,6 +373,12 @@ body {
 </head>
 <body>
 
+<!-- Timeline strip -->
+<div class="zpk-timeline">
+    From Barriers to Armor to Privacy... to Entropic Dispersal and Reassembly<br>
+    Password-Based Access Control (1970s-1980s) &rarr; Perimeter Defenses &amp; Antivirus (1990s-2000s) &rarr; End-to-End Encryption (2000s-2020s) &rarr; <strong>Zero Persistent Knowledge (ZPK&trade;) (2026-&infin;)</strong>
+</div>
+
 <!-- Nav -->
 <nav class="zpk-nav">
     <a href="/" class="zpk-logo">ZPK<span>Pay</span></a>
@@ -340,11 +401,24 @@ body {
             <span>until you need it.</span>
         </h1>
         <p class="hero-sub">
-            ZPK is an open protocol for payment privacy. Add it to any app. The engine stays ours.
+            ZPK is an open protocol for payment privacy. Open SDK. The engine is ours.
         </p>
         <div class="hero-actions">
             <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
             <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
+        </div>
+    </div>
+</section>
+
+<!-- Video -->
+<section class="zpk-video-section">
+    <h2>See it work.</h2>
+    <div class="video-wrapper" id="video-container">
+        <!-- Paste your YouTube URL and replace VIDEO_ID below -->
+        <!-- <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
+        <div class="video-placeholder">
+            <i class="bi bi-play-circle"></i>
+            <span>Demo video coming soon</span>
         </div>
     </div>
 </section>
