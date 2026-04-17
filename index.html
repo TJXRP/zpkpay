@@ -69,37 +69,41 @@ body {
 
 /* ── Hero ── */
 .zpk-hero {
-    background: var(--zpk-navy);
+    position: relative;
     color: #fff;
-    padding: 100px 40px 90px;
+    padding: 130px 40px 110px;
     text-align: center;
+    overflow: hidden;
 }
-.hero-badge {
-    display: inline-block;
-    background: rgba(232,150,12,0.15);
-    color: var(--zpk-orange);
-    border: 1px solid rgba(232,150,12,0.3);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 5px 16px;
-    border-radius: 20px;
-    margin-bottom: 28px;
-    font-family: 'JetBrains Mono', monospace;
+.zpk-hero-bg {
+    position: absolute;
+    inset: 0;
+    background: url('img/hero-bkg-1-bkg.jpg') center center / cover no-repeat;
+    z-index: 0;
+}
+.zpk-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 12, 28, 0.62);
+    z-index: 1;
+}
+.zpk-hero-content {
+    position: relative;
+    z-index: 2;
 }
 .hero-title {
-    font-size: clamp(36px, 5vw, 64px);
+    font-size: clamp(40px, 5.5vw, 72px);
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1.08;
     margin-bottom: 24px;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 .hero-title span { color: var(--zpk-orange); }
 .hero-sub {
-    font-size: 18px;
-    color: rgba(255,255,255,0.65);
-    max-width: 600px;
-    margin: 0 auto 40px;
+    font-size: 19px;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+    margin: 0 auto 44px;
     line-height: 1.6;
 }
 .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
@@ -134,7 +138,7 @@ body {
     font-weight: 700;
     letter-spacing: 0.1em;
     color: var(--zpk-orange);
-    text-transform: uppercase;
+
     margin-bottom: 12px;
 }
 .section-title {
@@ -328,17 +332,20 @@ body {
 
 <!-- Hero -->
 <section class="zpk-hero">
-    <div class="hero-badge">ZPK PROTOCOL · PATENT PENDING</div>
-    <h1 class="hero-title">
-        Privacy-first payments.<br>
-        <span>Zero persistent knowledge.</span>
-    </h1>
-    <p class="hero-sub">
-        Add ZPK to your app in minutes. Every payment is shattered, anchored, and settled on Xahau -- without any node ever holding a complete picture of the data.
-    </p>
-    <div class="hero-actions">
-        <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
-        <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
+    <div class="zpk-hero-bg"></div>
+    <div class="zpk-hero-overlay"></div>
+    <div class="zpk-hero-content">
+        <h1 class="hero-title">
+            Your data doesn't exist<br>
+            <span>until you need it.</span>
+        </h1>
+        <p class="hero-sub">
+            ZPK is an open protocol for payment privacy. Add it to any app. The engine stays ours.
+        </p>
+        <div class="hero-actions">
+            <a href="sdk.html" class="btn-zpk-primary">Read the SDK docs</a>
+            <a href="spec.html" class="btn-zpk-outline">Protocol specification</a>
+        </div>
     </div>
 </section>
 
