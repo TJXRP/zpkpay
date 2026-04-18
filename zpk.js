@@ -28,6 +28,7 @@ const ZPK_API          = 'https://api.aifs.dev/api/v1';
 const ZPK_SALT         = 'AIFS-ZPK-PRE-SHATTER-V1';
 const ZPK_PBKDF2_ITER  = 100000;
 const ZPK_KEY_BITS     = 256;
+const ZPK_DEMO_KEY     = '634c77c65fbe7d39dc54db564c619cefbc5a341bcebd7356';
 
 // ── Internal: key derivation ────────────────────────────────────
 async function _deriveKey(walletAddress) {
@@ -94,7 +95,7 @@ const zpk = {
 
         const res = await fetch(`${ZPK_API}/liquify`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-AIFS-KEY': options.apiKey || ZPK_DEMO_KEY },
             body: JSON.stringify({
                 manifest:              scrambled,
                 originAddress:         walletAddress,
@@ -131,7 +132,7 @@ const zpk = {
 
         const res = await fetch(`${ZPK_API}/materialize/${dna}`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-AIFS-KEY': options.apiKey || ZPK_DEMO_KEY },
             body: JSON.stringify({
                 address:   walletAddress,
                 authType:  options.authType  || 'wallet',
