@@ -6,6 +6,7 @@
 <title>Use Cases · ZPKPay</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1f36'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='18' font-weight='900' text-anchor='middle' fill='%23e8960c'>Z</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <script src="https://zpkpay.com/zpk.js"></script>
 <style>
 :root {
@@ -16,7 +17,7 @@
     --zpk-muted: #6b7280;
 }
 * { box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--zpk-navy); margin: 0; font-size: 15px; }
+body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--zpk-navy); margin: 0; font-size: 20px; }
 
 .zpk-nav {
     background: var(--zpk-cream);
@@ -41,7 +42,7 @@ body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--zpk-n
 h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 12px; }
 h2 { font-size: 20px; font-weight: 700; margin: 48px 0 8px; }
 p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
-.lead { font-size: 17px; color: var(--zpk-muted); line-height: 1.7; margin-bottom: 48px; }
+.lead { font-size: 22px; color: var(--zpk-muted); line-height: 1.7; margin-bottom: 48px; }
 
 .use-case-grid {
     display: grid;
@@ -55,9 +56,9 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     padding: 24px;
     border: 1px solid #e2e8f0;
 }
-.use-case-card .icon { font-size: 28px; margin-bottom: 12px; }
-.use-case-card h3 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
-.use-case-card p { font-size: 13px; color: var(--zpk-muted); margin: 0; line-height: 1.6; }
+.use-case-card .icon { font-size: 26px; margin-bottom: 12px; color: var(--zpk-orange); }
+.use-case-card h3 { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+.use-case-card p { font-size: 16px; color: var(--zpk-muted); margin: 0; line-height: 1.6; }
 
 /* Live demo */
 .demo-panel {
@@ -81,7 +82,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     margin-bottom: 28px;
 }
 .step-label {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--zpk-muted);
     letter-spacing: 0.06em;
@@ -93,7 +94,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 18px;
     color: var(--zpk-navy);
     background: #f8fafc;
     resize: vertical;
@@ -107,7 +108,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 17px;
     background: #f8fafc;
     color: var(--zpk-muted);
     min-height: 48px;
@@ -151,7 +152,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 }
 
 .status-line {
-    font-size: 12px;
+    font-size: 15px;
     color: var(--zpk-muted);
     margin-top: 8px;
     min-height: 18px;
@@ -207,47 +208,47 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 
     <div class="use-case-grid">
         <div class="use-case-card">
-            <div class="icon">🏥</div>
+            <div class="icon"><i class="bi bi-heart-pulse"></i></div>
             <h3>Medical records</h3>
             <p>Doctor shatters a lab result. Only the patient's wallet can materialize it. Nothing readable on any server.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">⚖️</div>
+            <div class="icon"><i class="bi bi-briefcase"></i></div>
             <h3>Legal contracts</h3>
             <p>Lawyer shatters a draft. Only the named counterparty can read it. Proof of delivery is the DNA anchor onchain.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">💰</div>
+            <div class="icon"><i class="bi bi-people"></i></div>
             <h3>Payroll</h3>
             <p>HR shatters salary data. Each employee's wallet sees only their own number. No shared database of compensation.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">🏦</div>
+            <div class="icon"><i class="bi bi-bank"></i></div>
             <h3>ISO 20022 payments</h3>
             <p>Payment message shattered before transmission. Receiver materializes. SWIFT-grade privacy on any rail.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">🤝</div>
+            <div class="icon"><i class="bi bi-building"></i></div>
             <h3>M&A due diligence</h3>
             <p>Shatter the data room. Receiver wallet is the acquiring party only. Expires the moment the deal closes.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">🖼️</div>
+            <div class="icon"><i class="bi bi-image"></i></div>
             <h3>NFT metadata</h3>
             <p>Shatter the token URI so only the proven owner can read the actual asset. No public metadata exposure.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">📁</div>
+            <div class="icon"><i class="bi bi-archive"></i></div>
             <h3>Permanent file storage</h3>
             <p>Shatter any file before it touches Arweave. 200-year storage. Zero liability. Only your wallet retrieves it.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">🤖</div>
+            <div class="icon"><i class="bi bi-cpu"></i></div>
             <h3>AI session context</h3>
             <p>Shatter conversation state between sessions. No persistent memory on any server. Compliance by architecture.</p>
         </div>
         <div class="use-case-card">
-            <div class="icon">🗳️</div>
+            <div class="icon"><i class="bi bi-shield-lock"></i></div>
             <h3>Whistleblower submissions</h3>
             <p>Shatter the document. DNA anchor is the receipt. No server ever holds the readable content.</p>
         </div>
@@ -303,7 +304,7 @@ p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
 </div>
 
 <script>
-const DEMO_WALLET = 'rZPKDemoWallet0000000000000000001';
+const DEMO_WALLET = 'rZPKPaySDKDemoAccount1111111111111';
 let currentDna = null;
 
 async function runShatter() {
@@ -357,7 +358,7 @@ async function runMaterialize() {
     status.textContent = 'Fetching noise from API, unscrambling locally...';
 
     try {
-        const original = await zpk.materialize(currentDna, DEMO_WALLET);
+        const original = await zpk.materialize(currentDna, DEMO_WALLET, { authType: 'demo' });
         result.className = 'demo-output success';
         result.textContent = original;
         status.className = 'status-line done';
