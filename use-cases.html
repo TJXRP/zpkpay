@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Use Cases · ZPKPay</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1f36'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='18' font-weight='900' text-anchor='middle' fill='%23e8960c'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://zpkpay.com/zpk.js"></script>
+<style>
+:root {
+    --zpk-navy:  #1a1f36;
+    --zpk-orange: #e8960c;
+    --zpk-blue:  #008CFF;
+    --zpk-cream: #fdf4f0;
+    --zpk-muted: #6b7280;
+}
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--zpk-navy); margin: 0; font-size: 15px; }
+
+.zpk-nav {
+    background: var(--zpk-cream);
+    border-bottom: 3px solid var(--zpk-orange);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.zpk-logo { font-size: 20px; font-weight: 900; color: var(--zpk-navy); text-decoration: none; }
+.zpk-logo span { color: var(--zpk-orange); }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a { font-size: 14px; font-weight: 600; color: var(--zpk-navy); text-decoration: none; opacity: 0.7; }
+.nav-links a:hover, .nav-links a.active { opacity: 1; }
+
+.page-content { max-width: 860px; margin: 0 auto; padding: 56px 40px 100px; }
+
+h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 12px; }
+h2 { font-size: 20px; font-weight: 700; margin: 48px 0 8px; }
+p { color: #374151; line-height: 1.7; margin-bottom: 16px; }
+.lead { font-size: 17px; color: var(--zpk-muted); line-height: 1.7; margin-bottom: 48px; }
+
+.use-case-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+    margin: 32px 0 56px;
+}
+.use-case-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+}
+.use-case-card .icon { font-size: 28px; margin-bottom: 12px; }
+.use-case-card h3 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+.use-case-card p { font-size: 13px; color: var(--zpk-muted); margin: 0; line-height: 1.6; }
+
+/* Live demo */
+.demo-panel {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    margin: 32px 0;
+}
+.demo-header {
+    background: var(--zpk-navy);
+    padding: 20px 28px;
+    color: #fff;
+}
+.demo-header h2 { color: #fff; margin: 0 0 4px; font-size: 18px; }
+.demo-header p { color: rgba(255,255,255,0.6); margin: 0; font-size: 13px; }
+
+.demo-body { padding: 28px; }
+
+.demo-step {
+    margin-bottom: 28px;
+}
+.step-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--zpk-muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+}
+.demo-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--zpk-navy);
+    background: #f8fafc;
+    resize: vertical;
+    min-height: 80px;
+}
+.demo-input:focus { outline: none; border-color: var(--zpk-blue); background: #fff; }
+
+.demo-output {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: #f8fafc;
+    color: var(--zpk-muted);
+    min-height: 48px;
+    word-break: break-all;
+    line-height: 1.6;
+}
+.demo-output.has-value { color: var(--zpk-navy); background: #fff; }
+.demo-output.success { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+
+.btn-zpk {
+    background: var(--zpk-navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+    margin-top: 12px;
+}
+.btn-zpk:hover { opacity: 0.85; }
+.btn-zpk:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-zpk.orange { background: var(--zpk-orange); }
+
+.demo-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 20px;
+    color: var(--zpk-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+.demo-divider::before, .demo-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.status-line {
+    font-size: 12px;
+    color: var(--zpk-muted);
+    margin-top: 8px;
+    min-height: 18px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.status-line.working { color: var(--zpk-orange); }
+.status-line.done { color: #166534; }
+.status-line.error { color: #dc2626; }
+
+.code-snippet {
+    background: var(--zpk-navy);
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 16px 0 0;
+    overflow-x: auto;
+}
+.code-snippet .c { color: #6b7280; }
+.code-snippet .k { color: var(--zpk-orange); }
+.code-snippet .s { color: #86efac; }
+
+@media (max-width: 768px) {
+    .zpk-nav { padding: 0 20px; }
+    .nav-links { gap: 16px; }
+    .page-content { padding: 32px 20px 80px; }
+    .use-case-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+    .use-case-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="zpk-nav">
+    <a href="/" class="zpk-logo">ZPK<span>Pay</span></a>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="spec.html">Protocol spec</a>
+        <a href="sdk.html">SDK reference</a>
+        <a href="use-cases.html" class="active">Use cases</a>
+        <a href="https://aifs.dev" target="_blank">Demo</a>
+    </div>
+</nav>
+
+<div class="page-content">
+
+    <h1>Use cases</h1>
+    <p class="lead">Any payload. Any wallet. Two functions. Here is what developers are building with ZPK.</p>
+
+    <div class="use-case-grid">
+        <div class="use-case-card">
+            <div class="icon">🏥</div>
+            <h3>Medical records</h3>
+            <p>Doctor shatters a lab result. Only the patient's wallet can materialize it. Nothing readable on any server.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">⚖️</div>
+            <h3>Legal contracts</h3>
+            <p>Lawyer shatters a draft. Only the named counterparty can read it. Proof of delivery is the DNA anchor onchain.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">💰</div>
+            <h3>Payroll</h3>
+            <p>HR shatters salary data. Each employee's wallet sees only their own number. No shared database of compensation.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">🏦</div>
+            <h3>ISO 20022 payments</h3>
+            <p>Payment message shattered before transmission. Receiver materializes. SWIFT-grade privacy on any rail.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">🤝</div>
+            <h3>M&A due diligence</h3>
+            <p>Shatter the data room. Receiver wallet is the acquiring party only. Expires the moment the deal closes.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">🖼️</div>
+            <h3>NFT metadata</h3>
+            <p>Shatter the token URI so only the proven owner can read the actual asset. No public metadata exposure.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">📁</div>
+            <h3>Permanent file storage</h3>
+            <p>Shatter any file before it touches Arweave. 200-year storage. Zero liability. Only your wallet retrieves it.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">🤖</div>
+            <h3>AI session context</h3>
+            <p>Shatter conversation state between sessions. No persistent memory on any server. Compliance by architecture.</p>
+        </div>
+        <div class="use-case-card">
+            <div class="icon">🗳️</div>
+            <h3>Whistleblower submissions</h3>
+            <p>Shatter the document. DNA anchor is the receipt. No server ever holds the readable content.</p>
+        </div>
+    </div>
+
+    <!-- Live demo -->
+    <div class="demo-panel">
+        <div class="demo-header">
+            <h2>Try it now</h2>
+            <p>Live demo running against the real ZPK API. No account. No setup.</p>
+        </div>
+        <div class="demo-body">
+
+            <div class="demo-step">
+                <div class="step-label">Step 1 - Type anything</div>
+                <textarea class="demo-input" id="demo-payload" placeholder="Enter any message, record, or data...">Patient: Jane Doe | Lab result: Glucose 94 mg/dL | Date: 2026-04-18</textarea>
+            </div>
+
+            <button class="btn-zpk" id="btn-shatter" onclick="runShatter()">Shatter it</button>
+            <div class="status-line" id="shatter-status"></div>
+
+            <div class="demo-divider" style="margin-top: 24px;">DNA anchor</div>
+
+            <div class="demo-step">
+                <div class="step-label">Step 2 - Your DNA anchor (onchain proof)</div>
+                <div class="demo-output" id="demo-dna">Waiting for shatter...</div>
+            </div>
+
+            <button class="btn-zpk orange" id="btn-materialize" onclick="runMaterialize()" disabled>Materialize it back</button>
+            <div class="status-line" id="materialize-status"></div>
+
+            <div class="demo-divider" style="margin-top: 24px;">Reassembled</div>
+
+            <div class="demo-step">
+                <div class="step-label">Step 3 - Original payload (unscrambled locally, never on server)</div>
+                <div class="demo-output" id="demo-result">Waiting for materialize...</div>
+            </div>
+
+            <div class="demo-step" style="margin-top: 32px; margin-bottom: 0;">
+                <div class="step-label">The code that just ran</div>
+                <div class="code-snippet">
+<span class="c">// One script tag. Two functions.</span>
+&lt;<span class="k">script</span> src=<span class="s">"https://zpkpay.com/zpk.js"</span>&gt;&lt;/<span class="k">script</span>&gt;
+
+<span class="k">const</span> dna = <span class="k">await</span> zpk.shatter(payload, walletAddress);
+<span class="k">const</span> original = <span class="k">await</span> zpk.materialize(dna, walletAddress);
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+const DEMO_WALLET = 'rZPKDemoWallet0000000000000000001';
+let currentDna = null;
+
+async function runShatter() {
+    const payload = document.getElementById('demo-payload').value.trim();
+    if (!payload) return;
+
+    const btn = document.getElementById('btn-shatter');
+    const status = document.getElementById('shatter-status');
+    const dnaOut = document.getElementById('demo-dna');
+    const matBtn = document.getElementById('btn-materialize');
+
+    btn.disabled = true;
+    matBtn.disabled = true;
+    currentDna = null;
+    dnaOut.className = 'demo-output';
+    dnaOut.textContent = 'Shattering...';
+    status.className = 'status-line working';
+    status.textContent = 'Scrambling locally, sending noise to API...';
+
+    try {
+        const dna = await zpk.shatter(payload, DEMO_WALLET);
+        currentDna = dna;
+        dnaOut.className = 'demo-output has-value';
+        dnaOut.textContent = dna;
+        status.className = 'status-line done';
+        status.textContent = 'Done. Plaintext never left your browser.';
+        matBtn.disabled = false;
+        document.getElementById('demo-result').className = 'demo-output';
+        document.getElementById('demo-result').textContent = 'Ready - hit Materialize it back';
+        document.getElementById('materialize-status').textContent = '';
+    } catch (err) {
+        dnaOut.textContent = 'Error: ' + err.message;
+        status.className = 'status-line error';
+        status.textContent = err.message;
+    }
+
+    btn.disabled = false;
+}
+
+async function runMaterialize() {
+    if (!currentDna) return;
+
+    const btn = document.getElementById('btn-materialize');
+    const status = document.getElementById('materialize-status');
+    const result = document.getElementById('demo-result');
+
+    btn.disabled = true;
+    result.className = 'demo-output';
+    result.textContent = 'Materializing...';
+    status.className = 'status-line working';
+    status.textContent = 'Fetching noise from API, unscrambling locally...';
+
+    try {
+        const original = await zpk.materialize(currentDna, DEMO_WALLET);
+        result.className = 'demo-output success';
+        result.textContent = original;
+        status.className = 'status-line done';
+        status.textContent = 'Unscrambled in your browser. Server returned noise, not this.';
+    } catch (err) {
+        result.textContent = 'Error: ' + err.message;
+        status.className = 'status-line error';
+        status.textContent = err.message;
+    }
+
+    btn.disabled = false;
+}
+</script>
+
+</body>
+</html>
