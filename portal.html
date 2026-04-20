@@ -642,8 +642,8 @@ select.field-input { cursor: pointer; }
     <div class="topbar-left">
         <div class="bank-logo"><i class="bi bi-globe"></i></div>
         <div>
-            <div class="bank-name">Global Settlement Terminal</div>
-            <div class="bank-sub">Treasury &amp; Payments</div>
+            <div class="bank-name">This is a Docker Settlement Terminal</div>
+            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onmouseover="showZPKTooltip()" onmouseout="hideZPKTooltip()">NO SSD?</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -652,6 +652,39 @@ select.field-input { cursor: pointer; }
         <span class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Connect Wallet</span>
     </div>
 </div>
+
+<!-- ZPK Tooltip Overlay -->
+<div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:#fff; color:#000; z-index:10000; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;">
+    <div style="max-width:800px;">
+        <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">HARD DRIVES ARE A LIABILITY.</div>
+        To eliminate data risk, we physically removed the storage from this machine.<br><br>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left;">
+            OS Configuration: AIFS Stateless Kernel v1.0.4<br>
+            Environment: Docker-Locked Vault Node<br>
+            Persistence: Zero (RAM-Only PXE Boot)<br>
+            ShatterEngine: Root-Bound v1.2.0
+        </div>
+        This terminal runs entirely in memory. Sensitive session data exists only during the "photon" of the transaction and can be purged the second confirmation is received.<br><br>
+        <strong>No drive. No cache. No breach.</strong>
+    </div>
+</div>
+
+<script>
+function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
+function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+</script>
+
+<style>
+.zpk-trigger {
+    color: var(--orange-dk);
+    cursor: help;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    transition: opacity 0.2s;
+}
+.zpk-trigger:hover { opacity: 0.8; }
+</style>
 
 <!-- Main -->
 <div class="main">
