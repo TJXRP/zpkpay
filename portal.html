@@ -643,7 +643,7 @@ select.field-input { cursor: pointer; }
         <div class="bank-logo"><i class="bi bi-globe"></i></div>
         <div>
             <div class="bank-name">This is a Docker Settlement Terminal</div>
-            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onmouseover="showZPKTooltip()" onmouseout="hideZPKTooltip()">NO SSD?</span></div>
+            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onclick="showZPKModal(event)">NO SSD?</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -653,31 +653,38 @@ select.field-input { cursor: pointer; }
     </div>
 </div>
 
-<!-- ZPK Tooltip Overlay -->
-<div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:#fff; color:#000; z-index:10000; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;">
-    <div style="max-width:800px;">
+<!-- ZPK Modal Overlay -->
+<div id="zpk-modal-overlay" onclick="hideZPKModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center; cursor:pointer;">
+    <div onclick="event.stopPropagation()" style="background:#fff; color:#000; max-width:800px; width:90%; border-radius:16px; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif; box-shadow:0 32px 80px rgba(0,0,0,0.4); cursor:default; text-align:center;">
         <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">HARD DRIVES ARE A LIABILITY.</div>
         To eliminate data risk, we physically removed the storage from this machine.<br><br>
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left;">
-            OS Configuration: AIFS Stateless Kernel v1.0.4<br>
-            Environment: Docker-Locked Vault Node<br>
-            Persistence: Zero (RAM-Only PXE Boot)<br>
-            ShatterEngine: Root-Bound v1.2.0
+        <div style="background:#f1f5f9; padding:24px; border-radius:12px; margin-bottom:28px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left; border:1px solid rgba(0,0,0,0.05);">
+            OS CONFIGURATION: AIFS STATELESS KERNEL V1.0.4<br>
+            ENVIRONMENT: DOCKER-LOCKED VAULT NODE<br>
+            PERSISTENCE: ZERO (RAM-ONLY PXE BOOT)<br>
+            SHATTERENGINE: ROOT-BOUND V1.2.0
         </div>
-        This terminal runs entirely in memory. Sensitive session data exists only during the "photon" of the transaction and can be purged the second confirmation is received.<br><br>
-        <strong>No drive. No cache. No breach.</strong>
+        This terminal runs entirely in memory. Sensitive data can be purged the second confirmation is received.<br><br>
+        <strong style="font-weight:800;">No drive. No cache. No breach.</strong>
+        <br><br>
+        <div style="font-size:11pt; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">Click anywhere to close</div>
     </div>
 </div>
 
 <script>
-function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
-function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+function showZPKModal(e) { 
+    if(e) e.preventDefault();
+    document.getElementById('zpk-modal-overlay').style.display = 'flex'; 
+}
+function hideZPKModal() { 
+    document.getElementById('zpk-modal-overlay').style.display = 'none'; 
+}
 </script>
 
 <style>
 .zpk-trigger {
     color: var(--orange-dk);
-    cursor: help;
+    cursor: pointer;
     font-weight: 700;
     text-decoration: underline;
     text-decoration-style: dotted;
