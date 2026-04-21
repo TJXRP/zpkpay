@@ -31,7 +31,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xumm-oauth2-pkce@2.8.7/dist/browser.min.js"></script>
-<script src="pre-shatter.js"></script>
 
 <style>
 :root {
@@ -640,51 +639,48 @@ select.field-input { cursor: pointer; }
 <!-- Top bar -->
 <div class="topbar">
     <div class="topbar-left">
-        <div class="bank-logo"><i class="bi bi-globe"></i></div>
+        <div class="bank-logo" style="background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 10L11 15" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13 9L18 14L13 19" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
         <div>
             <div class="bank-name">This is a Docker Settlement Terminal</div>
-            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onclick="showZPKModal(event)">NO SSD?</span></div>
+            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onmouseover="showZPKTooltip()" onmouseout="hideZPKTooltip()">NO SSD?</span></div>
         </div>
     </div>
     <div class="topbar-right">
-        <a href="/" style="font-size:12px;font-weight:600;color:#6b7280;text-decoration:none;opacity:0.7;margin-right:16px;">zpkpay.com</a>
         <span class="topbar-date" id="portal-date"></span>
         <span class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Connect Wallet</span>
     </div>
 </div>
 
-<!-- ZPK Modal Overlay -->
-<div id="zpk-modal-overlay" onclick="hideZPKModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center; cursor:pointer;">
-    <div onclick="event.stopPropagation()" style="background:#fff; color:#000; max-width:800px; width:90%; border-radius:16px; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif; box-shadow:0 32px 80px rgba(0,0,0,0.4); cursor:default; text-align:center;">
+<!-- ZPK Tooltip Overlay -->
+<div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:#fff; color:#000; z-index:10000; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;">
+    <div style="max-width:800px;">
         <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">HARD DRIVES ARE A LIABILITY.</div>
-        To eliminate data risk, we could easily remove all storage from this machine. (Think Arduino)<br><br>
-        <div style="background:#f1f5f9; padding:24px; border-radius:12px; margin-bottom:28px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left; border:1px solid rgba(0,0,0,0.05);">
-            OS CONFIGURATION: AIFS STATELESS KERNEL V1.0.4<br>
-            ENVIRONMENT: DOCKER-LOCKED VAULT NODE<br>
-            PERSISTENCE: ZERO (DISKLESS BOOT)<br>
-            PRE-SHATTER: ROOT-BOUND V1.2.0
+        To eliminate data risk, we physically removed the storage from this machine.<br><br>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left;">
+            OS Configuration: AIFS Stateless Kernel v1.0.4<br>
+            Environment: Docker-Locked Vault Node<br>
+            Persistence: Zero (RAM-Only PXE Boot)<br>
+            ShatterEngine: Root-Bound v1.2.0
         </div>
         This terminal runs entirely in memory. Sensitive session data exists only during the "photon" of the transaction and can be purged the second confirmation is received.<br><br>
-        <strong style="font-weight:800;">No drive. No cache. No breach.</strong>
-        <br><br>
-        <div style="font-size:11pt; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">Click anywhere to close</div>
+        <strong>No drive. No cache. No breach.</strong>
     </div>
 </div>
 
 <script>
-function showZPKModal(e) { 
-    if(e) e.preventDefault();
-    document.getElementById('zpk-modal-overlay').style.display = 'flex'; 
-}
-function hideZPKModal() { 
-    document.getElementById('zpk-modal-overlay').style.display = 'none'; 
-}
+function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
+function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
 </script>
 
 <style>
 .zpk-trigger {
     color: var(--orange-dk);
-    cursor: pointer;
+    cursor: help;
     font-weight: 700;
     text-decoration: underline;
     text-decoration-style: dotted;
@@ -702,7 +698,7 @@ function hideZPKModal() {
             <div class="card-header-top">
                 <div>
                     <div class="card-title">Simultaneous Payment</div>
-                    <div class="card-heading">Dual Rails: ISO 20022 + Xahau Payment</div>
+                    <div class="card-heading">Initiate Dual Rails: ISO 20022 + Xahau Payment</div>
                 </div>
                 <div class="zpk-badge">ZPK&trade; &ndash; Hooks Enforced Message</div>
             </div>
@@ -821,7 +817,7 @@ function hideZPKModal() {
         <div id="view-receipt" class="receipt">
             <div class="receipt-header">
                 <div class="receipt-check">&#10003;</div>
-                <div class="receipt-title" style="white-space:nowrap;">Payment Success + DNA Anchor Sent!</div>
+                <div class="receipt-title" style="white-space:nowrap;">&middot; Payment Confirmed &middot; Message Shattered &amp; Ready</div>
                 <div class="receipt-sub">Both rails settled. ISO message shattered. Nothing stored.</div>
             </div>
             <div class="receipt-rows">
@@ -846,7 +842,7 @@ function hideZPKModal() {
                     <span class="receipt-row-val green">ZPK&trade; &ndash; Hooks Enforced Message</span>
                 </div>
             </div>
-            <a class="btn-recover" id="btn-recover" href="https://zpkpay.com/recover-xahau.html" target="_blank">
+            <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
                 Recover ISO Message
                 <span class="btn-recover-tip" data-tip="Anyone with the anchor AND authorization can reassemble the message through the AIFS reassembly endpoint.">?</span>
             </a>
@@ -1088,16 +1084,12 @@ async function settle() {
         // Build a minimal ISO payload from form fields
         var payload = buildIsoPayload();
 
-        // Pre-shatter: scramble payload client-side before it leaves the browser.
-        // The server receives noise, never plaintext.
-        var scrambledPayload = await preShatter(payload, walletAddr);
-
         // 1. Shatter
         var liquifyRes = await fetch('https://api.aifs.dev/api/v1/liquify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                manifest: scrambledPayload,
+                manifest: payload,
                 originAddress: walletAddr || 'demo-portal',
                 receiverAddress: document.getElementById('f-bic').value.trim() || 'RECEIVER',
                 allowSenderReassembly: true
@@ -1270,7 +1262,7 @@ function showReceipt(txid) {
     }
     // Wire recover button with DNA anchor, sender role, and txid pre-filled
     if (dnaAnchor) {
-        var recoverUrl = 'https://zpkpay.com/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
+        var recoverUrl = 'https://aifs.dev/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
         if (txid) recoverUrl += '&txid=' + txid;
         document.getElementById('btn-recover').href = recoverUrl;
     }
