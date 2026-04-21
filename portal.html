@@ -766,6 +766,30 @@ select.field-input { cursor: pointer; }
 <script>
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+
+// ── Ctrl+click zoom (for demo/presentation) ──
+let _isZoomed = false;
+window.addEventListener('click', (e) => {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        const card = document.querySelector('.card');
+        if (!_isZoomed) {
+            card.style.transition = 'transform 0.3s ease';
+            card.style.transformOrigin = `${e.clientX}px ${e.clientY}px`;
+            card.style.transform = 'scale(1.65)';
+            _isZoomed = true;
+        } else {
+            card.style.transform = 'none';
+            _isZoomed = false;
+        }
+    }
+});
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && _isZoomed) {
+        document.querySelector('.card').style.transform = 'none';
+        _isZoomed = false;
+    }
+});
 </script>
 
 <style>
@@ -788,7 +812,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
         <div class="card-header">
             <div class="card-header-top">
                 <div>
-                    <div class="card-title">Simultaneous Payment</div>
+                    <div class="card-title">Stateless Terminal</div>
                     <div class="card-heading">2 Rails 1 Signature: ISO Message + XAH Payment</div>
                 </div>
                 <div style="color:#16a34a;font-weight:700;font-size:11pt;">ZPK&trade; &ndash; Hooks Enforced Message</div>
@@ -855,11 +879,11 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
             <div class="section-label">Payment Information</div>
             <div class="form-row">
                 <div class="field-group">
-                    <label class="field-label">Amount</label>
+                    <label class="field-label">Amount <span style="font-weight:400;font-size:9pt;color:var(--di);">(locked for demo)</span></label>
                     <input class="field-input" type="text" id="f-amount" placeholder="1000.00" value="0.001">
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Currency</label>
+                    <label class="field-label">Currency Agnostic<br><span style="font-size:9pt;font-weight:400;color:var(--di);letter-spacing:0;">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR</span></label>
                     <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
                 </div>
                 <div class="field-group"></div>
