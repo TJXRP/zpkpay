@@ -748,7 +748,7 @@ select.field-input { cursor: pointer; }
         </div>
         <div>
             <div class="bank-name" style="white-space:nowrap;"><span style="font-size:14pt;font-style:italic;font-weight:700;">Powered by ZPK&trade;</span> &ndash; This is a Hooks Enforced Stateless Settlement Terminal</div>
-            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span></div>
+            <div class="bank-sub">RAM only is an option. <span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -934,22 +934,22 @@ window.addEventListener('keydown', (e) => {
 
             <div class="section-label">
                 <select class="iso-type-select">
-                    <optgroup label="pacs — Payments Clearing and Settlement">
-                        <option value="pacs.008" selected>pacs.008 — FI to FI Credit Transfer</option>
-                        <option value="pacs.009">pacs.009 — FI-to-FI Financial Institution Transfer</option>
-                        <option value="pacs.004">pacs.004 — Payment Return</option>
-                        <option value="pacs.002">pacs.002 — Payment Status Report</option>
+                    <optgroup label="pacs · Payments Clearing and Settlement">
+                        <option value="pacs.008" selected>pacs.008 · FI to FI Credit Transfer</option>
+                        <option value="pacs.009">pacs.009 · FI-to-FI Financial Institution Transfer</option>
+                        <option value="pacs.004">pacs.004 · Payment Return</option>
+                        <option value="pacs.002">pacs.002 · Payment Status Report</option>
                     </optgroup>
-                    <optgroup label="pain — Payment Initiation">
-                        <option value="pain.001">pain.001 — Credit Transfer Initiation</option>
-                        <option value="pain.002">pain.002 — Payment Status Report</option>
-                        <option value="pain.008">pain.008 — Direct Debit Initiation</option>
+                    <optgroup label="pain · Payment Initiation">
+                        <option value="pain.001">pain.001 · Credit Transfer Initiation</option>
+                        <option value="pain.002">pain.002 · Payment Status Report</option>
+                        <option value="pain.008">pain.008 · Direct Debit Initiation</option>
                     </optgroup>
-                    <optgroup label="camt — Cash Management">
-                        <option value="camt.053">camt.053 — Bank Statement</option>
-                        <option value="camt.054">camt.054 — Debit/Credit Notification</option>
-                        <option value="camt.052">camt.052 — Account Report</option>
-                        <option value="camt.056">camt.056 — Payment Cancellation Request</option>
+                    <optgroup label="camt · Cash Management">
+                        <option value="camt.053">camt.053 · Bank Statement</option>
+                        <option value="camt.054">camt.054 · Debit/Credit Notification</option>
+                        <option value="camt.052">camt.052 · Account Report</option>
+                        <option value="camt.056">camt.056 · Payment Cancellation Request</option>
                     </optgroup>
                 </select>
                 <button class="btn-bulk" tabindex="-1">Upload Batch Transactions</button>
@@ -1038,7 +1038,7 @@ window.addEventListener('keydown', (e) => {
                 <div class="receipt-check">&#10003;</div>
                 <div style="font-size:1rem;font-weight:700;color:#16a34a;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Success!</div>
                 <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Payment &amp; ISO Message Finality</div>
-                <div class="receipt-sub" style="max-width:520px;margin:0 auto 4px;">The Xahau payment has settled onchain. The ISO message was shattered — only entropic fragments exist. No readable content crossed any network at any point. The recipient holds the DNA Anchor and will silently reassemble the message in RAM. Nothing persists. Nothing was exposed.</div>
+                <div class="receipt-sub" style="max-width:520px;margin:0 auto 4px;"><strong>No readable content crossed any network at any point.</strong><br><br>The recipient now has the DNA Anchor and can reassemble the message in RAM.<br><strong>No one on earth can do this but the recipient and the sender.</strong></div>
             </div>
             <div class="receipt-rows">
                 <div class="receipt-row">
@@ -1258,7 +1258,7 @@ async function connectWallet() {
                     document.getElementById('connect-overlay').classList.remove('open');
                     walletAddr = sd.account;
                     var btn = document.getElementById('wallet-btn');
-                    btn.textContent = walletAddr.substring(0,6) + '...' + walletAddr.slice(-4) + ' — Bound to Sender DNA Anchor';
+                    btn.textContent = walletAddr.substring(0,6) + '...' + walletAddr.slice(-4) + ' · Bound to Sender DNA Anchor';
                     btn.style.background = 'rgba(22,163,74,0.12)';
                     btn.style.borderColor = 'rgba(22,163,74,0.4)';
                     btn.style.color = '#15803d';
