@@ -739,9 +739,9 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
             <div class="card-header-top">
                 <div>
                     <div class="card-title">Simultaneous Payment</div>
-                    <div class="card-heading">Initiate Dual Rails: ISO 20022 + Xahau Payment</div>
+                    <div class="card-heading">2 Rails 1 Signature: ISO Msg + XAH Payment</div>
                 </div>
-                <div class="zpk-badge">ZPK&trade; &ndash; Hooks Enforced Message</div>
+                <div style="color:#dc2626;font-weight:700;font-size:11pt;">ZPK&trade; &ndash; Hooks Enforced Message</div>
             </div>
             <!-- Progress steps -->
             <div class="steps">
@@ -814,8 +814,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
 
             <span class="err-msg" id="form-err">Please fill in all required fields.</span>
 
-            <button class="btn-settle" onclick="goConfirm()">Review &amp; Confirm</button>
-            <div class="btn-settle-sub">Sends ISO 20022 Message + Xahau Payment simultaneously</div>
+            <button class="btn-settle" onclick="goConfirm()">Bind Payment &amp; Message Now</button>
         </div>
 
         <!-- Step 2: Confirm -->
@@ -850,7 +849,6 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
             <button class="btn-settle" id="btn-sign" onclick="settle()">
                 Confirm &amp; Settle Simultaneously
             </button>
-            <div class="btn-settle-sub">Sends ISO 20022 Message + Xahau Payment simultaneously</div>
             <button class="btn-secondary" onclick="goBack()">Back</button>
         </div>
 
@@ -858,7 +856,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
         <div id="view-receipt" class="receipt">
             <div class="receipt-header">
                 <div class="receipt-check">&#10003;</div>
-                <div class="receipt-title" style="white-space:nowrap;">&middot; Payment Confirmed &middot; Message Shattered &amp; Ready</div>
+                <div style="font-size:2rem;font-weight:900;color:#16a34a;margin:8px 0 4px;letter-spacing:-0.01em;">Message and Payment Bound</div>
                 <div class="receipt-sub">Both rails settled. ISO message shattered. Nothing stored.</div>
             </div>
             <div class="receipt-rows">
