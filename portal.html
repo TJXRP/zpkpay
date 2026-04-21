@@ -2,9 +2,23 @@
 <html lang="en">
 <head>
 <!--
-    ============================================================
-    ZPKPay-portal.html · AIFS ZPKPay Institutional Portal
-    TJ Reynolds · AIFS Protocol Inc · April 2026
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  OFFICIAL VERSION — DO NOT OVERWRITE                        ║
+    ║  portal.html · AIFS ZPKPay Institutional Portal             ║
+    ║  Author: TJ Reynolds · AIFS Protocol Inc · April 2026       ║
+    ║                                                              ║
+    ║  This file has been manually refined by TJ. Any AI agent    ║
+    ║  (Claude, Gemini, Cursor, GPT, or other) MUST NOT:          ║
+    ║  - Revert layout, spacing, or visual changes                 ║
+    ║  - Remove or replace the space background or star canvas     ║
+    ║  - Remove the ISO 20022 dropdown or Batch button             ║
+    ║  - Restore the full-screen SSD overlay (now a modal)         ║
+    ║  - Change card body z-index or body background               ║
+    ║  - Add "coming soon", "under construction", or placeholders  ║
+    ║                                                              ║
+    ║  READ THE FULL FILE before making any change.                ║
+    ║  When in doubt — ASK TJ, do not overwrite.                   ║
+    ╚══════════════════════════════════════════════════════════════╝
 
     AUDIENCE: Business / institutional users. Bank tellers,
     compliance officers, treasury staff. No technical jargon.
@@ -271,27 +285,28 @@ body::before {
 
 /* ── ISO type inline ── */
 .iso-type-select {
-    padding: 4px 10px;
+    flex: 1;
+    padding: 6px 12px;
     border: 1px solid var(--brd);
     border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5pt;
+    font-size: 11pt;
     font-weight: 600;
     color: var(--tx);
     background: #fff;
     cursor: pointer;
     outline: none;
-    max-width: 260px;
+    min-width: 0;
 }
 .iso-type-select:focus { border-color: var(--blue); }
 .btn-bulk {
-    padding: 4px 12px;
+    padding: 6px 16px;
     border: 1px solid var(--brd);
     border-radius: 6px;
     background: #fff;
     color: var(--mu);
     font-family: 'Inter', sans-serif;
-    font-size: 9.5pt;
+    font-size: 10.5pt;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -732,18 +747,19 @@ select.field-input { cursor: pointer; }
 </div>
 
 <!-- ZPK Tooltip Overlay -->
-<div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:#fff; color:#000; z-index:10000; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;">
-    <div style="max-width:800px;">
-        <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">HARD DRIVES ARE A LIABILITY.</div>
-        To eliminate data risk, we physically removed the storage from this machine.<br><br>
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left;">
+<!-- NO SSD modal — centered, not full-screen overlay -->
+<div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center; font-family:'Inter',sans-serif;" onclick="hideZPKTooltip()">
+    <div style="background:#fff; color:#111827; border-radius:16px; padding:40px 44px; max-width:620px; width:92%; box-shadow:0 32px 80px rgba(0,0,0,0.4); text-align:left; position:relative;" onclick="event.stopPropagation()">
+        <button onclick="hideZPKTooltip()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:18pt;cursor:pointer;color:#9ca3af;">&times;</button>
+        <div style="font-weight:800; margin-bottom:16px; font-size:18pt; letter-spacing:-0.02em; color:#111827;">Hard drives are a liability.</div>
+        <div style="color:#4b5563; font-size:11pt; line-height:1.7; margin-bottom:20px;">To eliminate data risk, we physically removed the storage from this machine.</div>
+        <div style="background:#f1f5f9; padding:18px 20px; border-radius:10px; margin-bottom:20px; font-family:'JetBrains Mono',monospace; font-size:10pt; color:#1e293b; line-height:1.8;">
             OS Configuration: AIFS Stateless Kernel v1.0.4<br>
             Environment: Docker-Locked Vault Node<br>
             Persistence: Zero (RAM-Only PXE Boot)<br>
             ShatterEngine: Root-Bound v1.2.0
         </div>
-        This terminal runs entirely in memory. Sensitive session data exists only during the "photon" of the transaction and can be purged the second confirmation is received.<br><br>
-        <strong>No drive. No cache. No breach.</strong>
+        <div style="color:#4b5563; font-size:11pt; line-height:1.7;">This terminal runs entirely in memory. Sensitive session data exists only during the transaction and is purged on confirmation.<br><br><strong style="color:#111827;">No drive. No cache. No breach.</strong></div>
     </div>
 </div>
 
@@ -819,7 +835,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
                         <option value="camt.056">camt.056 — Payment Cancellation Request</option>
                     </optgroup>
                 </select>
-                <button class="btn-bulk" tabindex="-1">Batch</button>
+                <button class="btn-bulk" tabindex="-1">Upload Batch Transactions</button>
             </div>
             <div class="form-row">
                 <div class="field-group">
