@@ -674,6 +674,15 @@ select.field-input { cursor: pointer; }
     justify-content: center;
     margin-bottom: 20px;
 }
+.modal-countdown {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+.countdown-svg { transform: rotate(-90deg); }
+.countdown-track { fill: none; stroke: #e2e8f0; stroke-width: 4; }
+.countdown-fill  { fill: none; stroke: var(--orange); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+.countdown-text  { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 700; fill: var(--tx); dominant-baseline: middle; text-anchor: middle; }
 #portal-qr { width: 200px; height: 200px; }
 .modal-status {
     font-size: 13pt;
@@ -768,6 +777,30 @@ select.field-input { cursor: pointer; }
 <script>
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+
+// ── Circular countdown timer ──
+var _cdTimers = {};
+function startCountdown(fillId, textId, seconds) {
+    if (_cdTimers[fillId]) clearInterval(_cdTimers[fillId]);
+    var total = seconds, remaining = seconds;
+    var circumference = 175.9;
+    var fill = document.getElementById(fillId);
+    var text = document.getElementById(textId);
+    function tick() {
+        var pct = remaining / total;
+        fill.style.strokeDashoffset = circumference * (1 - pct);
+        fill.style.stroke = remaining > 60 ? 'var(--orange)' : 'var(--red)';
+        var m = Math.floor(remaining / 60), s = remaining % 60;
+        text.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        if (remaining <= 0) { clearInterval(_cdTimers[fillId]); return; }
+        remaining--;
+    }
+    tick();
+    _cdTimers[fillId] = setInterval(tick, 1000);
+}
+function stopCountdown(fillId) {
+    if (_cdTimers[fillId]) { clearInterval(_cdTimers[fillId]); delete _cdTimers[fillId]; }
+}
 
 // ── ZPK Audio Manager — Web Audio API, zero external assets ──
 const ZPKAudio = {
@@ -873,7 +906,7 @@ window.addEventListener('keydown', (e) => {
         <div class="card-header">
             <div class="card-header-top">
                 <div>
-                    <div class="card-heading">2 Rails 1 Signature: ISO Message + XAH Payment</div>
+                    <div class="card-heading">Dual Rails &middot; 1 Signature: ISO Message + XAH Payment</div>
                 </div>
                 <div style="color:#16a34a;font-weight:700;font-size:11pt;">ZPK&trade; &ndash; Hooks Enforced Message</div>
             </div>
@@ -961,7 +994,7 @@ window.addEventListener('keydown', (e) => {
 
             <span class="err-msg" id="form-err">Please fill in all required fields.</span>
 
-            <button class="btn-settle" onclick="goConfirm()">Bind Payment &amp; Message Now</button>
+            <button class="btn-settle" onclick="goConfirm()">&#x2460; Bind the Payment to the ISO Message</button>
         </div>
 
         <!-- Step 2: Confirm -->
@@ -994,7 +1027,7 @@ window.addEventListener('keydown', (e) => {
             </div>
 
             <button class="btn-settle" id="btn-sign" onclick="settle()">
-                Confirm &amp; Settle Simultaneously
+                &#x2461; Payment &amp; ISO Message Bound &mdash; Confirm &amp; Settle Simultaneously
             </button>
             <button class="btn-secondary" onclick="goBack()">Back</button>
         </div>
@@ -1070,6 +1103,13 @@ window.addEventListener('keydown', (e) => {
         <div class="modal-title">Bind Sender to TX</div>
         <div class="modal-sub">Scan with Xaman to bind your identity to the transaction. No payment will be sent.</div>
         <div class="qr-wrap"><div id="connect-qr"></div></div>
+        <div class="modal-countdown">
+          <svg class="countdown-svg" width="64" height="64" viewBox="0 0 64 64">
+            <circle class="countdown-track" cx="32" cy="32" r="28"/>
+            <circle class="countdown-fill" id="cd1-fill" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/>
+            <text class="countdown-text" id="cd1-text" x="32" y="34" transform="rotate(90,32,32)">5:00</text>
+          </svg>
+        </div>
         <div class="modal-status" id="connect-status">Waiting for scan...</div>
         <button class="btn-modal-cancel" onclick="cancelConnect()">Cancel</button>
         <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
@@ -1079,9 +1119,16 @@ window.addEventListener('keydown', (e) => {
 <!-- Xaman signing modal -->
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
-        <div class="modal-title">Post Payment & Anchor Message</div>
+        <div class="modal-title">&middot; Post Payment<br>&middot; Anchor Message</div>
         <div class="modal-sub">Scan with Xaman to post the Xahau payment and permanently anchor the ISO 20022 message to the ledger.</div>
         <div class="qr-wrap"><div id="portal-qr"></div></div>
+        <div class="modal-countdown">
+          <svg class="countdown-svg" width="64" height="64" viewBox="0 0 64 64">
+            <circle class="countdown-track" cx="32" cy="32" r="28"/>
+            <circle class="countdown-fill" id="cd2-fill" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/>
+            <text class="countdown-text" id="cd2-text" x="32" y="34" transform="rotate(90,32,32)">5:00</text>
+          </svg>
+        </div>
         <div class="modal-status" id="modal-status">Waiting for signature...</div>
         <button class="btn-modal-cancel" onclick="cancelModal()">Cancel</button>
         <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
@@ -1188,6 +1235,7 @@ async function connectWallet() {
         // Show connect modal with QR
         var overlay = document.getElementById('connect-overlay');
         overlay.classList.add('open');
+        startCountdown('cd1-fill', 'cd1-text', 300);
         var qrDiv = document.getElementById('connect-qr');
         qrDiv.innerHTML = '';
         if (data.qrUrl && data.qrUrl.startsWith('http')) {
@@ -1227,6 +1275,7 @@ async function connectWallet() {
 
 function cancelConnect() {
     clearInterval(connectTimer);
+    stopCountdown('cd1-fill');
     document.getElementById('connect-overlay').classList.remove('open');
 }
 
@@ -1401,6 +1450,7 @@ function toHex(str) {
 function openModal(qrUrl, uuid) {
     var overlay = document.getElementById('modal-overlay');
     overlay.classList.add('open');
+    startCountdown('cd2-fill', 'cd2-text', 300);
     var qrDiv = document.getElementById('portal-qr');
     qrDiv.innerHTML = '';
     if (qrUrl && qrUrl.startsWith('http')) {
@@ -1413,6 +1463,7 @@ function openModal(qrUrl, uuid) {
 }
 
 function cancelModal() {
+    stopCountdown('cd2-fill');
     document.getElementById('modal-overlay').classList.remove('open');
     clearInterval(pollTimer);
     var btn = document.getElementById('btn-sign');
@@ -1435,6 +1486,8 @@ async function pollStatus(uuid) {
                 document.getElementById('modal-overlay').classList.remove('open');
                 var txid = data.txid || data.txHash || '';
                 settleTxId = txid;
+                stopCountdown('cd2-fill');
+                document.getElementById('modal-overlay').classList.remove('open');
                 setXahStatus('active', txid ? txid.substring(0,12) + '...' : 'Confirmed');
                 showReceipt(txid);
             }
