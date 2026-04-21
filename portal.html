@@ -266,8 +266,53 @@ body::before {
 
 /* ── Card body ── */
 .card-body {
-    padding: 36px 40px;
+    padding: 28px 40px 32px;
 }
+
+/* ── ISO type row ── */
+.iso-type-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--brd);
+}
+.iso-type-row label {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: var(--mu);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+.iso-type-select {
+    flex: 1;
+    padding: 9px 14px;
+    border: 2px solid #1a56db;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #1a56db;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+}
+.iso-type-select:focus { border-color: #1a3ab8; }
+.btn-bulk {
+    padding: 8px 16px;
+    border: 1px solid var(--brd);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--mu);
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+.btn-bulk:hover { background: var(--blue-lt); color: var(--blue); }
 
 /* ── Section label ── */
 .section-label {
@@ -764,6 +809,31 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
 
         <!-- Step 1: Enter Details -->
         <div id="view-enter" class="card-body">
+
+            <div class="iso-type-row">
+                <label>ISO 20022 TYPE</label>
+                <select class="iso-type-select">
+                    <optgroup label="pacs — Payments Clearing and Settlement">
+                        <option value="pacs.008" selected>pacs.008 — FI to FI Credit Transfer</option>
+                        <option value="pacs.009">pacs.009 — FI-to-FI Financial Institution Transfer</option>
+                        <option value="pacs.004">pacs.004 — Payment Return</option>
+                        <option value="pacs.002">pacs.002 — Payment Status Report</option>
+                    </optgroup>
+                    <optgroup label="pain — Payment Initiation">
+                        <option value="pain.001">pain.001 — Credit Transfer Initiation</option>
+                        <option value="pain.002">pain.002 — Payment Status Report</option>
+                        <option value="pain.008">pain.008 — Direct Debit Initiation</option>
+                    </optgroup>
+                    <optgroup label="camt — Cash Management">
+                        <option value="camt.053">camt.053 — Bank Statement</option>
+                        <option value="camt.054">camt.054 — Debit/Credit Notification</option>
+                        <option value="camt.052">camt.052 — Account Report</option>
+                        <option value="camt.056">camt.056 — Payment Cancellation Request</option>
+                    </optgroup>
+                </select>
+                <button class="btn-bulk" tabindex="-1">Bulk XML</button>
+            </div>
+
             <div class="section-label">Sender &amp; Recipient</div>
             <div class="form-row">
                 <div class="field-group">
@@ -776,7 +846,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
                 </div>
                 <div class="field-group">
                     <label class="field-label">Recipient BIC</label>
-                    <input class="field-input" type="text" id="f-bic" placeholder="e.g. CHASUS33" maxlength="11">
+                    <input class="field-input" type="text" id="f-bic" placeholder="e.g. CHASUS33" maxlength="11" value="CHASUS33">
                 </div>
             </div>
 
@@ -804,7 +874,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
             <div class="form-row-2">
                 <div class="field-group">
                     <label class="field-label">Reference</label>
-                    <input class="field-input" type="text" id="f-ref" placeholder="Payment reference">
+                    <input class="field-input" type="text" id="f-ref" placeholder="Payment reference" value="REF-2026-00441">
                 </div>
                 <div class="field-group">
                     <label class="field-label">Value Date</label>
