@@ -994,7 +994,7 @@ window.addEventListener('keydown', (e) => {
 
             <span class="err-msg" id="form-err">Please fill in all required fields.</span>
 
-            <button class="btn-settle" onclick="goConfirm()">&#x2460; Bind the Payment to the ISO Message</button>
+            <button class="btn-settle" onclick="goConfirm()"><span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2460;</span> Bind the Payment to the ISO Message</button>
         </div>
 
         <!-- Step 2: Confirm -->
@@ -1027,7 +1027,7 @@ window.addEventListener('keydown', (e) => {
             </div>
 
             <button class="btn-settle" id="btn-sign" onclick="settle()">
-                &#x2461; Payment &amp; ISO Message Bound &mdash; Confirm &amp; Settle Simultaneously
+                <span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2461;</span> Payment &amp; ISO Message Bound &mdash; Confirm &amp; Settle Simultaneously
             </button>
             <button class="btn-secondary" onclick="goBack()">Back</button>
         </div>
@@ -1036,9 +1036,9 @@ window.addEventListener('keydown', (e) => {
         <div id="view-receipt" class="receipt">
             <div class="receipt-header">
                 <div class="receipt-check">&#10003;</div>
-                <div style="font-size:2rem;font-weight:900;color:#16a34a;margin:8px 0 2px;letter-spacing:-0.01em;">Message and Payment Bound</div>
-                <div style="font-size:1.1rem;font-weight:700;color:#15803d;margin-bottom:6px;">Immutably On Ledger</div>
-                <div class="receipt-sub">Both rails settled. ISO message shattered. Nothing stored.</div>
+                <div style="font-size:1rem;font-weight:700;color:#16a34a;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Success!</div>
+                <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Payment &amp; ISO Message Finality</div>
+                <div class="receipt-sub" style="max-width:520px;margin:0 auto 4px;">The Xahau payment has settled onchain. The ISO message was shattered — only entropic fragments exist. No readable content crossed any network at any point. The recipient holds the DNA Anchor and will silently reassemble the message in RAM. Nothing persists. Nothing was exposed.</div>
             </div>
             <div class="receipt-rows">
                 <div class="receipt-row">
