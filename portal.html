@@ -812,7 +812,6 @@ window.addEventListener('keydown', (e) => {
         <div class="card-header">
             <div class="card-header-top">
                 <div>
-                    <div class="card-title">Stateless Terminal</div>
                     <div class="card-heading">2 Rails 1 Signature: ISO Message + XAH Payment</div>
                 </div>
                 <div style="color:#16a34a;font-weight:700;font-size:11pt;">ZPK&trade; &ndash; Hooks Enforced Message</div>
@@ -877,16 +876,15 @@ window.addEventListener('keydown', (e) => {
             </div>
 
             <div class="section-label">Payment Information</div>
-            <div class="form-row">
+            <div class="form-row" style="grid-template-columns:1fr 2fr;">
                 <div class="field-group">
                     <label class="field-label">Amount <span style="font-weight:400;font-size:9pt;color:var(--di);">(locked for demo)</span></label>
                     <input class="field-input" type="text" id="f-amount" placeholder="1000.00" value="0.001">
                 </div>
                 <div class="field-group">
-                    <label class="field-label" style="white-space:nowrap;">Currency Agnostic: <span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · XLM · etc...</span></label>
+                    <label class="field-label">Currency (agnostic)<br><span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · XLM · etc...</span></label>
                     <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
                 </div>
-                <div class="field-group"></div>
             </div>
 
             <div class="form-row-2">
