@@ -737,7 +737,7 @@ select.field-input { cursor: pointer; }
         </div>
         <div>
             <div class="bank-name">This is a Stateless Settlement Terminal</div>
-            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onmouseover="showZPKTooltip()" onmouseout="hideZPKTooltip()">NO SSD?</span></div>
+            <div class="bank-sub">RAM only is an option. — <span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -751,15 +751,15 @@ select.field-input { cursor: pointer; }
 <div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center; font-family:'Inter',sans-serif;" onclick="hideZPKTooltip()">
     <div style="background:#fff; color:#111827; border-radius:16px; padding:40px 44px; max-width:620px; width:92%; box-shadow:0 32px 80px rgba(0,0,0,0.4); text-align:left; position:relative;" onclick="event.stopPropagation()">
         <button onclick="hideZPKTooltip()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:18pt;cursor:pointer;color:#9ca3af;">&times;</button>
-        <div style="font-weight:800; margin-bottom:16px; font-size:18pt; letter-spacing:-0.02em; color:#111827;">Hard drives are a liability.</div>
-        <div style="color:#4b5563; font-size:11pt; line-height:1.7; margin-bottom:20px;">To eliminate data risk, we physically removed the storage from this machine.</div>
-        <div style="background:#f1f5f9; padding:18px 20px; border-radius:10px; margin-bottom:20px; font-family:'JetBrains Mono',monospace; font-size:10pt; color:#1e293b; line-height:1.8;">
+        <div style="font-weight:800; margin-bottom:16px; font-size:24pt; letter-spacing:-0.02em; color:#111827;">Hard drives are a liability.</div>
+        <div style="color:#4b5563; font-size:14pt; line-height:1.7; margin-bottom:20px;">To eliminate data risk, we physically removed the storage from this machine.</div>
+        <div style="background:#f1f5f9; padding:18px 20px; border-radius:10px; margin-bottom:20px; font-family:'JetBrains Mono',monospace; font-size:12pt; color:#1e293b; line-height:1.9;">
             OS Configuration: AIFS Stateless Kernel v1.0.4<br>
-            Environment: Docker-Locked Vault Node<br>
+            Environment: Stateless Vault Node<br>
             Persistence: Zero (RAM-Only PXE Boot)<br>
             ShatterEngine: Root-Bound v1.2.0
         </div>
-        <div style="color:#4b5563; font-size:11pt; line-height:1.7;">This terminal runs entirely in memory. Sensitive session data exists only during the transaction and is purged on confirmation.<br><br><strong style="color:#111827;">No drive. No cache. No breach.</strong></div>
+        <div style="color:#4b5563; font-size:14pt; line-height:1.7;">This terminal runs entirely in memory. Sensitive session data exists only during the transaction and is purged on confirmation.<br><br><strong style="color:#111827;">No drive. No cache. No breach.</strong></div>
     </div>
 </div>
 
@@ -883,7 +883,7 @@ window.addEventListener('keydown', (e) => {
                     <input class="field-input" type="text" id="f-amount" placeholder="1000.00" value="0.001">
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Currency Agnostic: <span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · etc...</span></label>
+                    <label class="field-label" style="white-space:nowrap;">Currency Agnostic: <span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · XLM · etc...</span></label>
                     <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
                 </div>
                 <div class="field-group"></div>
