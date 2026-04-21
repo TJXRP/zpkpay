@@ -57,13 +57,48 @@ html { scroll-behavior: smooth; }
 
 body {
     /* background: var(--bg); */ /* original light bg — commented out for space demo */
-    background: #0a0f1c url('img/space-bkg.jpg') center center / cover no-repeat fixed;
+    background: #0a0f1c;
     font-family: 'Inter', sans-serif;
     font-size: 14pt;
     color: var(--tx);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ── SPACE BACKGROUND (angled, same as walletscore.io) ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -30%;
+    width: 160%;
+    height: 160%;
+    background: url('img/space-bkg.jpg') center center / cover no-repeat;
+    transform: rotate(22deg);
+    transform-origin: center center;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+#star-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.bg-glow {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -5%, rgba(45,27,105,0.7) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 40% at 85% 15%, rgba(26,42,94,0.6) 0%, transparent 55%),
+      radial-gradient(ellipse 80% 30% at 50% 100%, rgba(180,80,20,0.08) 0%, transparent 60%);
 }
 
 /* ── Top bar ── */
@@ -636,6 +671,9 @@ select.field-input { cursor: pointer; }
 </style>
 </head>
 <body>
+
+<canvas id="star-canvas"></canvas>
+<div class="bg-glow"></div>
 
 <!-- Top bar -->
 <div class="topbar">
@@ -1289,6 +1327,73 @@ function reset() {
     document.getElementById('f-bic').value = '';
     document.getElementById('f-ref').value = '';
 }
+</script>
+
+<script>
+// ── SHOOTING STARS (identical to walletscore.io) ──────────────────────────
+const _sc = document.getElementById('star-canvas');
+const _cx = _sc.getContext('2d');
+let _stars = [];
+const S_SPEED = 7.5, S_SPAWN = 400;
+function _resizeSC() { _sc.width = window.innerWidth; _sc.height = window.innerHeight; }
+_resizeSC(); window.addEventListener('resize', _resizeSC);
+class _Star {
+  constructor() {
+    this.x=Math.random()*_sc.width*0.75; this.y=Math.random()*_sc.height*0.35;
+    this.vx=(1.5+Math.random()*2)*(S_SPEED/5); this.vy=(0.8+Math.random()*1.2)*(S_SPEED/5);
+    this.trail=[]; this.maxTrail=28; this.alive=true; this.alpha=0;
+    const sp=Math.sqrt(this.vx*this.vx+this.vy*this.vy);
+    const d=Math.sqrt(_sc.width*_sc.width+_sc.height*_sc.height);
+    this.maxLife=Math.round(d/sp*0.65); this.age=0;
+    this.fadeInEnd=12; this.fadeOutStart=Math.round(this.maxLife*0.6);
+  }
+  update() {
+    this.age++;
+    if(this.age<=this.fadeInEnd) this.alpha=this.age/this.fadeInEnd;
+    else if(this.age>=this.fadeOutStart) {
+      const p=(this.age-this.fadeOutStart)/(this.maxLife-this.fadeOutStart);
+      this.alpha=Math.max(0,1-p*p);
+    }
+    if(this.age>=this.maxLife){this.alive=false;return;}
+    this.trail.unshift({x:this.x,y:this.y});
+    if(this.trail.length>this.maxTrail)this.trail.pop();
+    this.x+=this.vx; this.y+=this.vy;
+  }
+  draw() {
+    if(this.trail.length<2||this.alpha<=0)return;
+    const bz=_sc.height*0.67;
+    const burn=this.y>bz?Math.min(1,(this.y-bz)/(_sc.height*0.28)):0;
+    const cr=Math.round(200+burn*55),cg=Math.round(220-burn*90),cb=Math.round(255-burn*230);
+    for(let i=1;i<this.trail.length;i++){
+      const r=1-i/this.trail.length,a=r*r*0.65*this.alpha;
+      _cx.beginPath();_cx.moveTo(this.trail[i-1].x,this.trail[i-1].y);
+      _cx.lineTo(this.trail[i].x,this.trail[i].y);
+      _cx.strokeStyle=`rgba(${cr},${cg},${cb},${a})`;
+      _cx.lineWidth=r*(1.6+burn*0.8);_cx.stroke();
+    }
+    const hg=Math.round(255-burn*160),hb=Math.round(255-burn*240);
+    const g=_cx.createRadialGradient(this.x,this.y,0,this.x,this.y,4+burn*3);
+    g.addColorStop(0,`rgba(255,${hg},${hb},${0.9*this.alpha})`);
+    g.addColorStop(1,'rgba(255,120,0,0)');
+    _cx.beginPath();_cx.arc(this.x,this.y,4+burn*3,0,Math.PI*2);_cx.fillStyle=g;_cx.fill();
+  }
+}
+let _sTimer=0,_sNext=8,_sBurst=0;
+const BURST_TOTAL=4;
+function _rSpawn(){return 420+Math.floor(Math.random()*480);}
+function _animStars(){
+  _cx.clearRect(0,0,_sc.width,_sc.height); _sTimer++;
+  const spawnNow=_sBurst<BURST_TOTAL?_sTimer>=_sNext:_sTimer>=_sNext&&_stars.length<2;
+  if(spawnNow){
+    _stars.push(new _Star()); _sTimer=0;
+    if(_sBurst<BURST_TOTAL){_sBurst++;_sNext=28+Math.floor(Math.random()*40);if(_sBurst>=BURST_TOTAL)_sNext=_rSpawn();}
+    else _sNext=_rSpawn();
+  }
+  _stars=_stars.filter(s=>s.alive);
+  _stars.forEach(s=>{s.update();s.draw();});
+  requestAnimationFrame(_animStars);
+}
+_animStars();
 </script>
 
 </body>
