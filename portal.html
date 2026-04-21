@@ -767,6 +767,65 @@ select.field-input { cursor: pointer; }
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
 
+// ── ZPK Audio Manager — Web Audio API, zero external assets ──
+const ZPKAudio = {
+    _ctx: null,
+    init() {
+        if (this._ctx) return;
+        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    },
+    _play(type) {
+        this.init();
+        var ctx = this._ctx;
+        if (ctx.state === 'suspended') ctx.resume();
+        var now = ctx.currentTime;
+        var g = ctx.createGain();
+        g.connect(ctx.destination);
+        if (type === 'click') {
+            var o = ctx.createOscillator();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(800, now);
+            g.gain.setValueAtTime(0.12, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            o.connect(g); o.start(now); o.stop(now + 0.04);
+        } else if (type === 'shatter') {
+            var len = ctx.sampleRate * 0.12;
+            var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+            var d = buf.getChannelData(0);
+            for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+            var src = ctx.createBufferSource();
+            src.buffer = buf;
+            var flt = ctx.createBiquadFilter();
+            flt.type = 'highpass';
+            flt.frequency.setValueAtTime(1200, now);
+            g.gain.setValueAtTime(0.15, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            src.connect(flt); flt.connect(g); src.start(now);
+        } else if (type === 'success') {
+            [523.25, 659.25, 783.99].forEach(function(freq, i) {
+                var osc = ctx.createOscillator();
+                var gn  = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                gn.gain.setValueAtTime(0, now + i * 0.1);
+                gn.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.04);
+                gn.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.35);
+                osc.connect(gn); gn.connect(ctx.destination);
+                osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.4);
+            });
+        }
+    },
+    click()   { this._play('click');   },
+    shatter() { this._play('shatter'); },
+    success() { this._play('success'); }
+};
+document.addEventListener('mousedown', function() { ZPKAudio.init(); }, { once: true });
+document.addEventListener('click', function(e) {
+    if (e.target.closest('button, .wallet-pill, .btn-settle, .btn-secondary, .btn-recover, .btn-new')) {
+        ZPKAudio.click();
+    }
+}, true);
+
 // ── Ctrl+click zoom (for demo/presentation) ──
 let _isZoomed = false;
 window.addEventListener('click', (e) => {
@@ -1225,7 +1284,7 @@ async function settle() {
         });
         var liquifyData = await liquifyRes.json();
         if (!liquifyData.success || !liquifyData.dna) throw new Error('Shatter failed');
-
+        ZPKAudio.shatter();
         dnaAnchor = liquifyData.dna;
         setIsoStatus('active', 'Shattered - DNA ' + dnaAnchor.substring(0,8) + '...');
 
@@ -1394,6 +1453,7 @@ function showReceipt(txid) {
         if (txid) recoverUrl += '&txid=' + txid;
         document.getElementById('btn-recover').href = recoverUrl;
     }
+    ZPKAudio.success();
     setStep(3);
     var btn = document.getElementById('btn-sign');
     btn.disabled = false;
