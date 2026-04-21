@@ -269,40 +269,25 @@ body::before {
     padding: 28px 40px 32px;
 }
 
-/* ── ISO type row ── */
-.iso-type-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--brd);
-}
-.iso-type-row label {
-    font-size: 10.5pt;
-    font-weight: 700;
-    color: var(--mu);
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-}
+/* ── ISO type inline ── */
 .iso-type-select {
-    flex: 1;
-    padding: 9px 14px;
-    border: 2px solid #1a56db;
-    border-radius: 8px;
+    padding: 4px 10px;
+    border: 1px solid var(--brd);
+    border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5pt;
+    font-size: 9.5pt;
     font-weight: 600;
-    color: #1a56db;
+    color: var(--tx);
     background: #fff;
     cursor: pointer;
     outline: none;
+    max-width: 260px;
 }
-.iso-type-select:focus { border-color: #1a3ab8; }
+.iso-type-select:focus { border-color: var(--blue); }
 .btn-bulk {
-    padding: 8px 16px;
+    padding: 4px 12px;
     border: 1px solid var(--brd);
-    border-radius: 8px;
+    border-radius: 6px;
     background: #fff;
     color: var(--mu);
     font-family: 'Inter', sans-serif;
@@ -323,7 +308,11 @@ body::before {
     margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--brd);
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
+.section-label span { flex: 0 0 auto; }
 
 /* ── Form grid ── */
 .form-row {
@@ -810,8 +799,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
         <!-- Step 1: Enter Details -->
         <div id="view-enter" class="card-body">
 
-            <div class="iso-type-row">
-                <label>ISO 20022 TYPE</label>
+            <div class="section-label">
                 <select class="iso-type-select">
                     <optgroup label="pacs — Payments Clearing and Settlement">
                         <option value="pacs.008" selected>pacs.008 — FI to FI Credit Transfer</option>
@@ -831,10 +819,8 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
                         <option value="camt.056">camt.056 — Payment Cancellation Request</option>
                     </optgroup>
                 </select>
-                <button class="btn-bulk" tabindex="-1">Bulk XML</button>
+                <button class="btn-bulk" tabindex="-1">Batch</button>
             </div>
-
-            <div class="section-label">Sender &amp; Recipient</div>
             <div class="form-row">
                 <div class="field-group">
                     <label class="field-label">Sender</label>
@@ -860,15 +846,7 @@ function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
                     <label class="field-label">Currency</label>
                     <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
                 </div>
-                <div class="field-group">
-                    <label class="field-label">Purpose</label>
-                    <select class="field-input" id="f-purpose">
-                        <option>Invoice Payment (pacs.008)</option>
-                        <option>Bank Transfer (pacs.009)</option>
-                        <option>Return Payment (pacs.004)</option>
-                        <option>Credit Transfer (pain.001)</option>
-                    </select>
-                </div>
+                <div class="field-group"></div>
             </div>
 
             <div class="form-row-2">
