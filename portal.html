@@ -293,12 +293,12 @@ body::before {
     font-size: 11pt;
     font-weight: 600;
     color: var(--tx);
-    background: #fff;
+    background: #fdf4f0;
     cursor: pointer;
     outline: none;
     min-width: 0;
 }
-.iso-type-select:focus { border-color: var(--blue); }
+.iso-type-select:focus { border-color: var(--orange); }
 .btn-bulk {
     padding: 6px 16px;
     border: 1px solid var(--brd);
@@ -742,7 +742,7 @@ select.field-input { cursor: pointer; }
     </div>
     <div class="topbar-right">
         <span class="topbar-date" id="portal-date"></span>
-        <span class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Connect Wallet</span>
+        <span class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Bind Xaman Wallet to Sender DNA Anchor</span>
     </div>
 </div>
 
@@ -1147,8 +1147,11 @@ async function connectWallet() {
                     clearInterval(connectTimer);
                     document.getElementById('connect-overlay').classList.remove('open');
                     walletAddr = sd.account;
-                    document.getElementById('wallet-btn').textContent =
-                        walletAddr.substring(0,6) + '...' + walletAddr.slice(-4);
+                    var btn = document.getElementById('wallet-btn');
+                    btn.textContent = walletAddr.substring(0,6) + '...' + walletAddr.slice(-4) + ' — Bound to Sender DNA Anchor';
+                    btn.style.background = 'rgba(22,163,74,0.12)';
+                    btn.style.borderColor = 'rgba(22,163,74,0.4)';
+                    btn.style.color = '#15803d';
                     // If settle was waiting on wallet, proceed automatically
                     settle();
                 }
@@ -1176,7 +1179,7 @@ function goConfirm() {
         return;
     }
     err.style.display = 'none';
-    var purpose  = document.getElementById('f-purpose').value;
+    var purpose  = document.querySelector('.iso-type-select').value;
     var date     = document.getElementById('f-date').value;
     var ref      = document.getElementById('f-ref').value || 'N/A';
 
@@ -1267,7 +1270,7 @@ async function settle() {
 
 // ── Build ISO 20022 XML payload ──
 function buildIsoPayload() {
-    var purpose  = document.getElementById('f-purpose').value;
+    var purpose  = document.querySelector('.iso-type-select').value;
     var sender   = document.getElementById('f-sender').value.trim() || 'Global Settlement Terminal';
     var recipient= document.getElementById('f-recipient').value.trim();
     var bic      = document.getElementById('f-bic').value.trim() || 'AIFSZPK0';
