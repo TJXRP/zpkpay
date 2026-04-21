@@ -568,6 +568,8 @@ select.field-input { cursor: pointer; }
 .receipt-row-key { color: var(--mu); font-weight: 500; }
 .receipt-row-val { font-weight: 700; color: var(--tx); font-family: 'JetBrains Mono', monospace; font-size: 12pt; }
 .receipt-row-val.green { color: var(--green); }
+.receipt-link { text-decoration: none; }
+.receipt-link:hover { text-decoration: underline; opacity: 0.85; }
 
 .btn-recover {
     width: 100%;
@@ -1001,29 +1003,30 @@ window.addEventListener('keydown', (e) => {
         <div id="view-receipt" class="receipt">
             <div class="receipt-header">
                 <div class="receipt-check">&#10003;</div>
-                <div style="font-size:2rem;font-weight:900;color:#16a34a;margin:8px 0 4px;letter-spacing:-0.01em;">Message and Payment Bound</div>
+                <div style="font-size:2rem;font-weight:900;color:#16a34a;margin:8px 0 2px;letter-spacing:-0.01em;">Message and Payment Bound</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#15803d;margin-bottom:6px;">Immutably On Ledger</div>
                 <div class="receipt-sub">Both rails settled. ISO message shattered. Nothing stored.</div>
             </div>
             <div class="receipt-rows">
                 <div class="receipt-row">
                     <span class="receipt-row-key">Transaction</span>
-                    <span class="receipt-row-val" id="r-txid">-</span>
+                    <a class="receipt-row-val receipt-link" id="r-txid" href="#" target="_blank">-</a>
                 </div>
                 <div class="receipt-row">
                     <span class="receipt-row-key">DNA Anchor</span>
-                    <span class="receipt-row-val" id="r-dna">-</span>
+                    <a class="receipt-row-val receipt-link" id="r-dna" href="#" target="_blank">-</a>
                 </div>
                 <div class="receipt-row">
-                    <span class="receipt-row-key">ISO Message</span>
-                    <span class="receipt-row-val green">Shattered - Zero Persistent Knowledge</span>
+                    <span class="receipt-row-key">Private Particle Storage</span>
+                    <a class="receipt-row-val green receipt-link" id="r-particles" href="https://aifs.dev/recover-xahau.html" target="_blank">Shattered - Zero Persistent Knowledge</a>
                 </div>
                 <div class="receipt-row">
                     <span class="receipt-row-key">Xahau Settlement</span>
-                    <span class="receipt-row-val green">Confirmed onchain</span>
+                    <a class="receipt-row-val green receipt-link" id="r-xahau" href="#" target="_blank">Confirmed onchain</a>
                 </div>
                 <div class="receipt-row">
-                    <span class="receipt-row-key">Compliance</span>
-                    <span class="receipt-row-val green">ZPK&trade; &ndash; Hooks Enforced Message</span>
+                    <span class="receipt-row-key">Hook Return</span>
+                    <span class="receipt-row-val green">ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.</span>
                 </div>
             </div>
             <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
@@ -1064,8 +1067,8 @@ window.addEventListener('keydown', (e) => {
 <!-- Xaman connect modal -->
 <div class="modal-overlay" id="connect-overlay">
     <div class="modal">
-        <div class="modal-title">Connect Wallet</div>
-        <div class="modal-sub">Scan with Xaman to verify your identity. No transaction will be sent.</div>
+        <div class="modal-title">Bind Sender to TX</div>
+        <div class="modal-sub">Scan with Xaman to bind your identity to the transaction. No payment will be sent.</div>
         <div class="qr-wrap"><div id="connect-qr"></div></div>
         <div class="modal-status" id="connect-status">Waiting for scan...</div>
         <button class="btn-modal-cancel" onclick="cancelConnect()">Cancel</button>
@@ -1076,8 +1079,8 @@ window.addEventListener('keydown', (e) => {
 <!-- Xaman signing modal -->
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
-        <div class="modal-title">Authorize Payment</div>
-        <div class="modal-sub">Scan the code below with your Xaman wallet to authorize the simultaneous ISO 20022 message and Xahau settlement.</div>
+        <div class="modal-title">Post Payment & Anchor Message</div>
+        <div class="modal-sub">Scan with Xaman to post the Xahau payment and permanently anchor the ISO 20022 message to the ledger.</div>
         <div class="qr-wrap"><div id="portal-qr"></div></div>
         <div class="modal-status" id="modal-status">Waiting for signature...</div>
         <button class="btn-modal-cancel" onclick="cancelModal()">Cancel</button>
@@ -1441,17 +1444,31 @@ async function pollStatus(uuid) {
 
 // ── Show receipt ──
 function showReceipt(txid) {
-    document.getElementById('r-dna').textContent = dnaAnchor || '-';
-    document.getElementById('r-txid').textContent = txid ? txid.substring(0,16) + '...' : 'Confirmed';
-    if (txid) {
-        var exBtn = document.getElementById('btn-explorer');
-        exBtn.style.display = 'block';
-    }
-    // Wire recover button with DNA anchor, sender role, and txid pre-filled
+    var explorerBase = 'https://xahauexplorer.com/explorer/';
+    var recoverBase  = 'https://aifs.dev/recover-xahau.html';
+
+    // Transaction row
+    var txEl = document.getElementById('r-txid');
+    txEl.textContent = txid ? txid.substring(0,16) + '...' : 'Confirmed';
+    txEl.href = txid ? explorerBase + txid : '#';
+
+    // DNA Anchor row
+    var dnaEl = document.getElementById('r-dna');
+    dnaEl.textContent = dnaAnchor || '-';
     if (dnaAnchor) {
-        var recoverUrl = 'https://aifs.dev/recover-xahau.html?dna=' + dnaAnchor + '&role=sender';
+        var recoverUrl = recoverBase + '?dna=' + dnaAnchor + '&role=sender';
         if (txid) recoverUrl += '&txid=' + txid;
-        document.getElementById('btn-recover').href = recoverUrl;
+        dnaEl.href = recoverUrl;
+        document.getElementById('r-particles').href = recoverUrl;
+    }
+
+    // Xahau settlement row
+    var xahEl = document.getElementById('r-xahau');
+    xahEl.href = txid ? explorerBase + txid : '#';
+
+    // Wire recover button
+    if (dnaAnchor) {
+        document.getElementById('btn-recover').href = (dnaAnchor ? recoverBase + '?dna=' + dnaAnchor + '&role=sender' + (txid ? '&txid=' + txid : '') : recoverBase);
     }
     ZPKAudio.success();
     setStep(3);
