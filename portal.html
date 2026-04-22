@@ -1479,7 +1479,18 @@ async function pollStatus(uuid) {
         try {
             var res  = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau/status/' + uuid);
             var data = await res.json();
-            if (data.signed) {
+            if (data.failed) {
+                clearInterval(pollTimer);
+                stopCountdown('cd2-fill');
+                document.getElementById('modal-overlay').classList.remove('open');
+                setXahStatus('failed', data.reason || 'Hook rejected');
+                var btn = document.getElementById('btn-sign');
+                btn.disabled = false;
+                btn.innerHTML = '<span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2461;</span> Payment &amp; ISO Message Bound &middot; Confirm &amp; Settle Simultaneously';
+                var errEl = document.getElementById('form-err');
+                errEl.textContent = 'Hook rejected: ' + (data.reason || 'tecHOOK_REJECTED') + '. Reserve may be exhausted on the Hook gateway account.';
+                errEl.style.display = 'block';
+            } else if (data.signed) {
                 clearInterval(pollTimer);
                 document.getElementById('modal-overlay').classList.remove('open');
                 var txid = data.txid || data.txHash || '';
