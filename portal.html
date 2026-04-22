@@ -1201,8 +1201,10 @@ function setIsoStatus(state, detail) {
     rail.className  = 'status-rail' + (state === 'active' ? ' rail-active' : state === 'pending' ? ' rail-pending' : state === 'failed' ? ' rail-failed' : '');
     wrap.className  = 'status-icon-wrap iso' + (state === 'active' ? ' active' : '');
     check.className = 'status-check' + (state === 'active' ? ' active' : '');
-    title.textContent = state === 'active' ? 'ISO Message Sent' : 'ISO Message';
-    det.textContent = detail;
+    title.textContent = state === 'active' ? 'ISO Message Proof + Payment = Unified' : 'ISO Message';
+    det.style.color = state === 'active' ? '#16a34a' : '';
+    det.style.fontFamily = state === 'active' ? 'inherit' : '';
+    det.textContent = state === 'active' ? 'Message shattered. Zero readable content transmitted.' : detail;
 }
 function setXahStatus(state, detail) {
     var rail  = document.getElementById('xah-rail');
@@ -1213,8 +1215,10 @@ function setXahStatus(state, detail) {
     rail.className  = 'status-rail' + (state === 'active' ? ' rail-active' : state === 'pending' ? ' rail-pending' : state === 'failed' ? ' rail-failed' : '');
     wrap.className  = 'status-icon-wrap xah' + (state === 'active' ? ' active' : '');
     check.className = 'status-check' + (state === 'active' ? ' active' : '');
-    title.textContent = state === 'active' ? 'Hooks Confirmed' : 'Xahau Payment';
-    det.textContent = detail;
+    title.textContent = state === 'active' ? 'Hooks Enforcement Successful' : 'Xahau Payment';
+    det.style.color = state === 'active' ? '#16a34a' : '';
+    det.style.fontFamily = state === 'active' ? 'inherit' : '';
+    det.textContent = state === 'active' ? 'Anchor verified onchain. ISO Message ZPK\u2122-compliant. Finality confirmed.' : detail;
 }
 
 // ── Wallet connect ──
