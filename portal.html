@@ -1188,6 +1188,7 @@ function setStep(n) {
     document.getElementById('view-enter').style.display   = n === 1 ? 'block' : 'none';
     document.getElementById('view-confirm').style.display = n === 2 ? 'block' : 'none';
     document.getElementById('view-receipt').style.display = n === 3 ? 'block' : 'none';
+    document.querySelector('.steps').style.display = n === 3 ? 'none' : '';
 }
 
 // ── Status bar helpers ──
