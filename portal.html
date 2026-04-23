@@ -975,7 +975,11 @@ window.addEventListener('keydown', (e) => {
                         <option value="camt.056">camt.056 · Payment Cancellation Request</option>
                     </optgroup>
                 </select>
-                <button class="btn-bulk" tabindex="-1">Upload Batch Transactions</button>
+                <!-- BATCH COUNT: 10,000 — verify max throughput before pilot -->
+                <button class="btn-bulk" tabindex="-1" style="background:var(--orange);color:#fff;border-color:var(--orange);position:relative;">
+                    Upload Batch Transactions
+                    <span style="position:absolute;top:-9px;right:-6px;background:#1e293b;color:#fff;font-size:7.5pt;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;">Up to 10,000 XML Documents</span>
+                </button>
             </div>
             <div class="form-row">
                 <div class="field-group">
@@ -995,11 +999,11 @@ window.addEventListener('keydown', (e) => {
             <div class="section-label">Payment Information</div>
             <div class="form-row" style="grid-template-columns:1fr 2fr;">
                 <div class="field-group">
-                    <label class="field-label">Amount <span style="font-weight:400;font-size:9pt;color:var(--di);">(locked for demo)</span></label>
+                    <label class="field-label">Cross Border Settlement Amount</label>
                     <input class="field-input" type="text" id="f-amount" placeholder="1000.00" value="0.001">
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Currency (agnostic)<br><span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · XLM · etc...</span></label>
+                    <label class="field-label">Settlement Currency<br><span style="font-weight:400;color:var(--di);">XAH · RLUSD · XRP · USDC · BASE · ADA · MIDNIGHT · SOL · HBAR · XLM · etc...</span></label>
                     <input class="field-input" type="text" value="XAH" readonly style="background:#f1f5f9;color:var(--mu);cursor:default;">
                 </div>
             </div>
@@ -1017,7 +1021,7 @@ window.addEventListener('keydown', (e) => {
 
             <span class="err-msg" id="form-err">Please fill in all required fields.</span>
 
-            <button class="btn-settle" onclick="goConfirm()"><span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2460;</span> Bind XAH Payment &amp; ISO Message Now</button>
+            <button class="btn-settle" onclick="goConfirm()">Bind XAH Payment &amp; ISO Message Now</button>
         </div>
 
         <!-- Step 2: Confirm -->
@@ -1050,7 +1054,7 @@ window.addEventListener('keydown', (e) => {
             </div>
 
             <button class="btn-settle" id="btn-sign" onclick="settle()">
-                <span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2461;</span> Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously
+                Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously
             </button>
             <button class="btn-secondary" onclick="goBack()">Back</button>
         </div>
@@ -1495,7 +1499,7 @@ async function pollStatus(uuid) {
                 setXahStatus('failed', data.reason || 'Hook rejected');
                 var btn = document.getElementById('btn-sign');
                 btn.disabled = false;
-                btn.innerHTML = '<span style="font-size:22pt;font-weight:650;line-height:1;vertical-align:middle;margin-right:6px;">&#x2461;</span> Payment &amp; ISO Message Bound &middot; Confirm &amp; Settle Simultaneously';
+                btn.innerHTML = 'Payment &amp; ISO Message Bound &middot; Confirm &amp; Settle Simultaneously';
                 var errEl = document.getElementById('form-err');
                 errEl.textContent = 'Hook rejected: ' + (data.reason || 'tecHOOK_REJECTED') + '. Reserve may be exhausted on the Hook gateway account.';
                 errEl.style.display = 'block';
