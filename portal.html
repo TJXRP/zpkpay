@@ -1053,6 +1053,23 @@ window.addEventListener('keydown', (e) => {
             <button class="btn-settle" id="btn-sign" onclick="settle()">
                 Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously
             </button>
+
+            <!-- DNA anchor review panel — shown after shatter, before Xaman opens -->
+            <div id="dna-anchor-panel" style="display:none;margin-bottom:16px;">
+                <div style="font-size:12pt;font-weight:700;color:#111827;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+                    DNA Anchor
+                    <span style="position:relative;display:inline-block;">
+                        <span style="width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:1.5px solid #cbd5e1;display:inline-flex;align-items:center;justify-content:center;font-size:11pt;font-weight:700;color:#64748b;cursor:pointer;" onmouseenter="document.getElementById('dna-map-tip').style.display='block'" onmouseleave="document.getElementById('dna-map-tip').style.display='none'">?</span>
+                        <div id="dna-map-tip" style="display:none;position:absolute;left:28px;top:-10px;z-index:999;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.13);padding:8px;">
+                            <img src="img/DNA-Map-diagram.jpg" alt="DNA Anchor Map" style="width:340px;height:auto;display:block;border-radius:6px;">
+                        </div>
+                    </span>
+                </div>
+                <input id="dna-anchor-input" type="text" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:600;color:#dc2626;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 14px;letter-spacing:0.08em;" maxlength="24" spellcheck="false">
+                <div style="font-size:10.5pt;color:#64748b;margin-top:5px;">24-character anchor. Edit any character to simulate a non-compliant message.</div>
+                <button class="btn-settle" onclick="proceedToSign()" style="margin-top:14px;">Proceed to Sign in Xaman</button>
+            </div>
+
             <button class="btn-secondary" onclick="goBack()">Back</button>
         </div>
 
@@ -1313,7 +1330,13 @@ function goConfirm() {
     setStep(2);
 }
 
-function goBack() { setStep(1); }
+function goBack() {
+    document.getElementById('dna-anchor-panel').style.display = 'none';
+    document.getElementById('btn-sign').style.display = 'block';
+    document.getElementById('btn-sign').disabled = false;
+    document.getElementById('btn-sign').innerHTML = 'Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously';
+    setStep(1);
+}
 
 // ── Step 2: Settle ──
 async function settle() {
@@ -1348,7 +1371,34 @@ async function settle() {
         dnaAnchor = liquifyData.dna;
         setIsoStatus('active', 'Shattered - DNA ' + dnaAnchor.substring(0,8) + '...');
 
-        // 2. Prepare Xahau tx — XAH drops through Hook gateway
+        // Show editable anchor field — user can inspect or tamper before signing
+        btn.style.display = 'none';
+        var anchorPanel = document.getElementById('dna-anchor-panel');
+        document.getElementById('dna-anchor-input').value = dnaAnchor;
+        anchorPanel.style.display = 'block';
+
+    } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously';
+        setIsoStatus('failed', 'Error: ' + e.message);
+        setXahStatus('', 'Awaiting signature');
+    }
+}
+
+async function proceedToSign() {
+    var anchorPanel = document.getElementById('dna-anchor-panel');
+    var editedAnchor = document.getElementById('dna-anchor-input').value.trim().toUpperCase();
+    dnaAnchor = editedAnchor;
+    anchorPanel.style.display = 'none';
+
+    var btn = document.getElementById('btn-sign');
+    btn.style.display = 'block';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Awaiting Xaman signature...';
+    setXahStatus('pending', 'Awaiting Xaman signature...');
+
+    try {
+        // 2. Prepare Xahau tx
         var rawAmount = document.getElementById('f-amount').value.trim().replace(/,/g,'');
         var xahDrops = Math.round((parseFloat(rawAmount) || 0.001) * 1000000).toString();
         var txjson = {
@@ -1365,9 +1415,6 @@ async function settle() {
         };
 
         // 3. Get Xaman payload via backend
-        btn.innerHTML = '<span class="spinner"></span>Awaiting Xaman signature...';
-        setXahStatus('pending', 'Awaiting Xaman signature...');
-
         var settleRes = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1381,7 +1428,7 @@ async function settle() {
 
     } catch(e) {
         btn.disabled = false;
-        btn.innerHTML = 'Confirm &amp; Settle Simultaneously';
+        btn.innerHTML = 'Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously';
         setIsoStatus('failed', 'Error: ' + e.message);
         setXahStatus('', 'Awaiting signature');
     }
