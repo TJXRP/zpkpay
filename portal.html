@@ -1100,7 +1100,7 @@ window.addEventListener('keydown', (e) => {
                 </div>
                 <div class="receipt-row">
                     <span class="receipt-row-key">Hook Return</span>
-                    <span class="receipt-row-val green">ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.</span>
+                    <span class="receipt-row-val green" id="r-hook">ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.</span>
                 </div>
             </div>
             <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
@@ -1541,12 +1541,7 @@ async function pollStatus(uuid) {
                 stopCountdown('cd2-fill');
                 document.getElementById('modal-overlay').classList.remove('open');
                 setXahStatus('failed', data.reason || 'Hook rejected');
-                var btn = document.getElementById('btn-sign');
-                btn.disabled = false;
-                btn.innerHTML = 'Payment &amp; ISO Message Bound &middot; Confirm &amp; Settle Simultaneously';
-                var errEl = document.getElementById('form-err');
-                errEl.textContent = 'Hook rejected: ' + (data.reason || 'tecHOOK_REJECTED') + '. Reserve may be exhausted on the Hook gateway account.';
-                errEl.style.display = 'block';
+                showRejection(data.reason || 'tecHOOK_REJECTED');
             } else if (data.signed) {
                 clearInterval(pollTimer);
                 document.getElementById('modal-overlay').classList.remove('open');
@@ -1559,6 +1554,34 @@ async function pollStatus(uuid) {
             }
         } catch(e) {}
     }, 2000);
+}
+
+// ── Show rejection receipt ──
+function showRejection(reason) {
+    var header = document.querySelector('#view-receipt .receipt-header');
+    header.innerHTML = `
+        <div class="receipt-check" style="background:#fee2e2;color:#dc2626;">&#10007;</div>
+        <div style="font-size:1rem;font-weight:800;color:#dc2626;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">REJECTED</div>
+        <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Hook Enforcer - Payment Blocked</div>
+        <div style="font-size:1rem;font-weight:700;color:#dc2626;max-width:520px;margin:0 auto 4px;">${reason}</div>`;
+    document.getElementById('r-txid').textContent = 'None - ledger rejected';
+    document.getElementById('r-txid').style.color = '#dc2626';
+    document.getElementById('r-dna').textContent = dnaAnchor || '-';
+    document.getElementById('r-hook').textContent = 'ZPK-Enforcer: DNA anchor rejected. NON-COMPLIANT. REJECTED BY HOOK ENFORCER.';
+    document.getElementById('r-hook').style.color = '#dc2626';
+    document.getElementById('r-hook').className = 'receipt-row-val';
+    document.getElementById('r-xahau').textContent = 'Blocked - not settled';
+    document.getElementById('r-xahau').style.color = '#dc2626';
+    document.getElementById('r-xahau').className = 'receipt-row-val';
+    document.getElementById('r-particles').textContent = 'Nothing stored - transaction blocked';
+    document.getElementById('r-particles').style.color = '#dc2626';
+    document.getElementById('r-particles').className = 'receipt-row-val';
+    document.getElementById('btn-recover').style.display = 'none';
+    var btn = document.getElementById('btn-sign');
+    btn.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = 'Payment &amp; ISO Message Bound &middot; Confirm &amp; Settle Simultaneously';
+    setStep(3);
 }
 
 // ── Show receipt ──
@@ -1604,6 +1627,25 @@ function openExplorer() {
 function reset() {
     dnaAnchor  = null;
     settleTxId = null;
+    // Restore receipt header to success state for next run
+    document.querySelector('#view-receipt .receipt-header').innerHTML = `
+        <div class="receipt-check">&#10003;</div>
+        <div style="font-size:1rem;font-weight:700;color:#16a34a;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Success!</div>
+        <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Payment &amp; ISO Message Finality</div>
+        <div class="receipt-sub" style="max-width:520px;margin:0 auto 4px;"><strong>No readable content crossed any network at any point.</strong></div>`;
+    document.getElementById('r-hook').textContent = 'ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.';
+    document.getElementById('r-hook').style.color = '';
+    document.getElementById('r-hook').className = 'receipt-row-val green';
+    document.getElementById('r-xahau').textContent = 'Confirmed onchain';
+    document.getElementById('r-xahau').style.color = '';
+    document.getElementById('r-xahau').className = 'receipt-row-val green receipt-link';
+    document.getElementById('r-particles').textContent = 'Shattered - Zero Persistent Knowledge';
+    document.getElementById('r-particles').style.color = '';
+    document.getElementById('r-particles').className = 'receipt-row-val green receipt-link';
+    document.getElementById('r-txid').style.color = '';
+    document.getElementById('btn-recover').style.display = '';
+    document.getElementById('dna-anchor-panel').style.display = 'none';
+    document.getElementById('btn-sign').style.display = 'block';
     setStep(1);
     setIsoStatus('', 'Awaiting submission');
     setXahStatus('', 'Awaiting signature');
