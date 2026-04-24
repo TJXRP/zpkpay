@@ -1083,24 +1083,16 @@ window.addEventListener('keydown', (e) => {
             </div>
             <div class="receipt-rows">
                 <div class="receipt-row">
-                    <span class="receipt-row-key">Transaction</span>
+                    <span class="receipt-row-key">ZPK-Enforcer Hook</span>
+                    <span class="receipt-row-val green" id="r-hook">Compliant: Accepted.</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-row-key">Unified Settlement</span>
                     <a class="receipt-row-val receipt-link" id="r-txid" href="#" target="_blank">-</a>
                 </div>
                 <div class="receipt-row">
-                    <span class="receipt-row-key">DNA Anchor</span>
-                    <a class="receipt-row-val receipt-link" id="r-dna" href="#" target="_blank">-</a>
-                </div>
-                <div class="receipt-row">
-                    <span class="receipt-row-key">Private Particle Storage</span>
-                    <a class="receipt-row-val green receipt-link" id="r-particles" href="https://aifs.dev/recover-xahau.html" target="_blank">Shattered - Zero Persistent Knowledge</a>
-                </div>
-                <div class="receipt-row">
-                    <span class="receipt-row-key">Xahau Settlement</span>
-                    <a class="receipt-row-val green receipt-link" id="r-xahau" href="#" target="_blank">Confirmed onchain</a>
-                </div>
-                <div class="receipt-row">
-                    <span class="receipt-row-key">Hook Return</span>
-                    <span class="receipt-row-val green" id="r-hook">ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.</span>
+                    <span class="receipt-row-key">Raw Particle Storage</span>
+                    <a class="receipt-row-val green receipt-link" id="r-particles" href="https://aifs.dev/recover-xahau.html" target="_blank">View on Irys</a>
                 </div>
             </div>
             <a class="btn-recover" id="btn-recover" href="https://aifs.dev/recover-xahau.html" target="_blank">
@@ -1566,13 +1558,10 @@ function showRejection(reason) {
         <div style="font-size:1rem;font-weight:700;color:#dc2626;max-width:520px;margin:0 auto 4px;">${reason}</div>`;
     document.getElementById('r-txid').textContent = 'None - ledger rejected';
     document.getElementById('r-txid').style.color = '#dc2626';
-    document.getElementById('r-dna').textContent = dnaAnchor || '-';
-    document.getElementById('r-hook').textContent = 'ZPK-Enforcer: DNA anchor rejected. NON-COMPLIANT. REJECTED BY HOOK ENFORCER.';
+    document.getElementById('r-txid').removeAttribute('href');
+    document.getElementById('r-hook').textContent = 'NON-COMPLIANT. REJECTED BY HOOK ENFORCER.';
     document.getElementById('r-hook').style.color = '#dc2626';
     document.getElementById('r-hook').className = 'receipt-row-val';
-    document.getElementById('r-xahau').textContent = 'Blocked - not settled';
-    document.getElementById('r-xahau').style.color = '#dc2626';
-    document.getElementById('r-xahau').className = 'receipt-row-val';
     document.getElementById('r-particles').textContent = 'Nothing stored - transaction blocked';
     document.getElementById('r-particles').style.color = '#dc2626';
     document.getElementById('r-particles').className = 'receipt-row-val';
@@ -1589,28 +1578,21 @@ function showReceipt(txid) {
     var explorerBase = 'https://xahauexplorer.com/explorer/';
     var recoverBase  = 'https://aifs.dev/recover-xahau.html';
 
-    // Transaction row
+    // Unified Settlement row — DNA anchor as display text, links to Xahau Explorer
     var txEl = document.getElementById('r-txid');
-    txEl.textContent = txid ? txid.substring(0,16) + '...' : 'Confirmed';
+    txEl.textContent = dnaAnchor || (txid ? txid.substring(0,16) + '...' : 'Confirmed');
     txEl.href = txid ? explorerBase + txid : '#';
 
-    // DNA Anchor row
-    var dnaEl = document.getElementById('r-dna');
-    dnaEl.textContent = dnaAnchor || '-';
+    // Raw Particle Storage row — links to recover portal with DNA anchor pre-filled
     if (dnaAnchor) {
         var recoverUrl = recoverBase + '?dna=' + dnaAnchor + '&role=sender';
         if (txid) recoverUrl += '&txid=' + txid;
-        dnaEl.href = recoverUrl;
         document.getElementById('r-particles').href = recoverUrl;
     }
 
-    // Xahau settlement row
-    var xahEl = document.getElementById('r-xahau');
-    xahEl.href = txid ? explorerBase + txid : '#';
-
     // Wire recover button
     if (dnaAnchor) {
-        document.getElementById('btn-recover').href = (dnaAnchor ? recoverBase + '?dna=' + dnaAnchor + '&role=sender' + (txid ? '&txid=' + txid : '') : recoverBase);
+        document.getElementById('btn-recover').href = recoverBase + '?dna=' + dnaAnchor + '&role=sender' + (txid ? '&txid=' + txid : '');
     }
     ZPKAudio.success();
     setStep(3);
@@ -1633,13 +1615,10 @@ function reset() {
         <div style="font-size:1rem;font-weight:700;color:#16a34a;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Success!</div>
         <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Payment &amp; ISO Message Finality</div>
         <div class="receipt-sub" style="max-width:520px;margin:0 auto 4px;"><strong>No readable content crossed any network at any point.</strong></div>`;
-    document.getElementById('r-hook').textContent = 'ZPK-Enforcer: DNA anchor verified. ZPK-compliant. Accepted.';
+    document.getElementById('r-hook').textContent = 'Compliant: Accepted.';
     document.getElementById('r-hook').style.color = '';
     document.getElementById('r-hook').className = 'receipt-row-val green';
-    document.getElementById('r-xahau').textContent = 'Confirmed onchain';
-    document.getElementById('r-xahau').style.color = '';
-    document.getElementById('r-xahau').className = 'receipt-row-val green receipt-link';
-    document.getElementById('r-particles').textContent = 'Shattered - Zero Persistent Knowledge';
+    document.getElementById('r-particles').textContent = 'View on Irys';
     document.getElementById('r-particles').style.color = '';
     document.getElementById('r-particles').className = 'receipt-row-val green receipt-link';
     document.getElementById('r-txid').style.color = '';
