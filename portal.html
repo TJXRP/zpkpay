@@ -1418,7 +1418,7 @@ async function proceedToSign() {
         var settleRes = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ txjson: txjson, dna: dnaAnchor })
+            body: JSON.stringify({ txjson: txjson, dna: dnaAnchor, portal_demo: true })
         });
         var settleData = await settleRes.json();
         if (!settleData.success || !settleData.uuid) throw new Error('Settlement init failed');
