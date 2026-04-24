@@ -1414,10 +1414,9 @@ async function proceedToSign() {
         openModal(settleData.qrUrl || settleData.deepLink, settleData.uuid);
 
     } catch(e) {
-        btn.disabled = false;
-        btn.innerHTML = 'Payment &amp; ISO Message Bound · Confirm &amp; Settle Simultaneously';
-        setIsoStatus('failed', 'Error: ' + e.message);
-        setXahStatus('', 'Awaiting signature');
+        btn.style.display = 'none';
+        document.getElementById('dna-anchor-panel').style.display = 'block';
+        setXahStatus('failed', e.message);
     }
 }
 
