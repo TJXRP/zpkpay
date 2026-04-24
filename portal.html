@@ -1551,7 +1551,7 @@ function showRejection(reason) {
         <div style="font-size:1rem;font-weight:800;color:#dc2626;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">REJECTED</div>
         <div style="font-size:1.9rem;font-weight:900;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;line-height:1.15;">Hook Enforcer - Payment Blocked</div>
         <div style="font-size:11pt;font-weight:800;color:#dc2626;letter-spacing:0.06em;margin-bottom:6px;">ZPK_DNA_VIOLATION</div>
-        <div style="font-size:13pt;font-weight:400;color:#374151;max-width:480px;margin:0 auto;line-height:1.6;">It is mathematically impossible to unify this payment with this ISO message. The DNA anchor presented to the Hook Enforcer does not validate.<br><br>No settlement occurred, please reload and try again.</div>`;
+        <div style="font-size:13pt;font-weight:400;color:#374151;max-width:480px;margin:0 auto;line-height:1.6;">It is mathematically impossible to unify this payment with this ISO message.<br><span style="color:#dc2626;font-weight:600;">The DNA anchor presented to the Hook Enforcer will not validate.</span><br><br>No settlement occurred, please reload and try again.</div>`;
     setIsoStatus('', 'Awaiting submission');
     document.getElementById('r-txid').textContent = 'None - ledger rejected';
     document.getElementById('r-txid').style.color = '#dc2626';
