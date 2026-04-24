@@ -1161,6 +1161,7 @@ const EXPLORER      = 'https://xahauexplorer.com/explorer/';
 let xumm        = null;
 let walletAddr  = null;
 let dnaAnchor   = null;
+let originalAnchor = null;
 let settleTxId  = null;
 let pollTimer   = null;
 
@@ -1356,6 +1357,7 @@ async function settle() {
         if (!liquifyData.success || !liquifyData.dna) throw new Error('Shatter failed');
         ZPKAudio.shatter();
         dnaAnchor = liquifyData.dna;
+        originalAnchor = dnaAnchor;
         setIsoStatus('active', 'Shattered - DNA ' + dnaAnchor.substring(0,8) + '...');
 
         // Show editable anchor field — user can inspect or tamper before signing
@@ -1405,7 +1407,7 @@ async function proceedToSign() {
         var settleRes = await fetch('https://api.aifs.dev/api/v1/auth/xaman/settle-xahau', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ txjson: txjson, dna: dnaAnchor })
+            body: JSON.stringify({ txjson: txjson, dna: dnaAnchor, portal_demo: dnaAnchor !== originalAnchor })
         });
         var settleData = await settleRes.json();
         if (!settleData.success || !settleData.uuid) throw new Error('Settlement init failed');
@@ -1604,6 +1606,7 @@ function openExplorer() {
 // ── Reset ──
 function reset() {
     dnaAnchor  = null;
+    originalAnchor = null;
     settleTxId = null;
     // Restore receipt header to success state for next run
     document.querySelector('#view-receipt .receipt-header').innerHTML = `
