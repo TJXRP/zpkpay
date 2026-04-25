@@ -751,7 +751,7 @@ select.field-input { cursor: pointer; }
             <img src="img/zpk-logo-black.png" alt="ZPK" style="height:56px;width:auto;">
         </div>
         <div>
-            <div class="bank-sub"><span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span> · <span class="zpk-trigger" onclick="showEntropography()">Entropography</span></div>
+            <div class="bank-sub"><span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span> · <span class="zpk-trigger" onclick="showEntropography()">Entropography</span> · <span class="zpk-trigger" onclick="showHooks()">Hooks</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -775,6 +775,28 @@ select.field-input { cursor: pointer; }
             <li style="padding:10px 0; color:#4b5563; font-size:15pt; line-height:1.6;">A breach of the terminal exposes nothing</li>
         </ul>
         <div style="font-size:16pt; font-weight:700; color:#111827; line-height:1.6;">The attack surface of a terminal breach drops to zero when there is no data at rest.</div>
+    </div>
+</div>
+
+<!-- Hooks Modal Overlay -->
+<div id="hooks-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10001; align-items:center; justify-content:center; padding:40px; font-family:'Inter', sans-serif;" onclick="hideHooks()">
+    <div style="max-width:800px; width:100%; background:#fff; color:#000; padding:48px 52px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.5); text-align:left;" onclick="event.stopPropagation()">
+        <div style="margin-bottom:16px;">
+            <span style="font-weight:800; font-size:26pt; letter-spacing:-0.02em; color:#111827;">Hooks</span>
+            <span style="font-size:13pt; color:#9ca3af; font-weight:400; margin-left:10px;">&middot; ledger-native smart contracts</span>
+        </div>
+        <div style="font-size:15pt; color:#111827; line-height:1.7; margin-bottom:10px;">In this ZPKPay fully functional demo, Hooks are lightweight smart contracts that run automatically on every transaction.</div>
+        <div style="font-size:13pt; color:#6b7280; font-style:italic; margin-bottom:28px;">&ldquo;Rules the vault enforces itself. No middleman, no override.&rdquo;</div>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:28px; font-family:'JetBrains Mono',monospace; font-size:13pt; color:#111827; line-height:1.8;">
+            Enforcer: ZPK-Enforcer Hook v1<br>
+            Trigger: Every inbound payment<br>
+            Validates: DNA Anchor authenticity &amp; format compliance<br>
+            On Violation: Immediate rejection. No settlement.<br>
+            Network: Xahau Ledger (Mainnet)
+        </div>
+        <div style="font-size:15pt; color:#111827; line-height:1.7; margin-bottom:24px;">If the anchor is invalid or non-compliant, the Hook immediately rejects the transaction. This rejection is intentional and desired. It enforces Zero Persistent Knowledge of the ISO message via mathematical law.</div>
+        <strong style="font-size:14pt; color:#111827;">It is mathematically impossible to spoof ZPK using Hooks.</strong>
+        <div style="text-align:right; font-size:9pt; color:#9ca3af; margin-top:20px;">USPTO application(s) on file</div>
     </div>
 </div>
 
@@ -804,6 +826,8 @@ function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.di
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
 function showEntropography() { document.getElementById('entropography-overlay').style.display = 'flex'; }
 function hideEntropography() { document.getElementById('entropography-overlay').style.display = 'none'; }
+function showHooks() { document.getElementById('hooks-overlay').style.display = 'flex'; }
+function hideHooks() { document.getElementById('hooks-overlay').style.display = 'none'; }
 
 // ── Circular countdown timer ──
 var _cdTimers = {};
