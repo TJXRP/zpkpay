@@ -7,6 +7,12 @@
     ║  portal.html · AIFS ZPKPay Institutional Portal             ║
     ║  Author: TJ Reynolds · AIFS Protocol Inc · April 2026       ║
     ║                                                              ║
+    ║  REPO:   github.com/TJXRP/zpkpay  (d:\zpkpay\)             ║
+    ║  DOMAIN: zpkpay.com                                         ║
+    ║  WARNING: d:\aifs\public\portal.html is a DIFFERENT file    ║
+    ║           for aifs.dev — edits there do NOT affect this     ║
+    ║           site. Always edit THIS file for zpkpay.com.       ║
+    ║                                                              ║
     ║  This file has been manually refined by TJ. Any AI agent    ║
     ║  (Claude, Gemini, Cursor, GPT, or other) MUST NOT:          ║
     ║  - Revert layout, spacing, or visual changes                 ║
@@ -745,7 +751,7 @@ select.field-input { cursor: pointer; }
             <img src="img/zpk-logo-black.png" alt="ZPK" style="height:56px;width:auto;">
         </div>
         <div>
-            <div class="bank-sub">RAM only is an option. <span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span></div>
+            <div class="bank-sub"><span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span> · <span class="zpk-trigger" onclick="showEntropography()">Entropography</span></div>
         </div>
     </div>
     <div class="topbar-right">
@@ -772,9 +778,27 @@ select.field-input { cursor: pointer; }
     </div>
 </div>
 
+<!-- Entropography Modal Overlay -->
+<div id="entropography-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); color:#fff; z-index:10001; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;" onclick="hideEntropography()">
+    <div style="max-width:800px; background:#fff; color:#000; padding:40px; border-radius:20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+        <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">Entropography</div>
+        Entropography is the science of controlled entropic dispersal and reassembly of information.<br><br>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left; color:#000;">
+            Protocol: AIFS ZPK v1.0<br>
+            Method: Deterministic Fragmentation<br>
+            State: Zero Persistent Knowledge (ZPK)<br>
+            Anchor: Private Ledger Witness
+        </div>
+        Data scatters into entropy with no persistent trace, then reassembles only on authorized demand via an immutable anchor.<br><br>
+        <strong>No trace. No leak. No liability.</strong>
+    </div>
+</div>
+
 <script>
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+function showEntropography() { document.getElementById('entropography-overlay').style.display = 'flex'; }
+function hideEntropography() { document.getElementById('entropography-overlay').style.display = 'none'; }
 
 // ── Circular countdown timer ──
 var _cdTimers = {};
@@ -1160,6 +1184,11 @@ const EXPLORER      = 'https://xahauexplorer.com/explorer/';
 
 let xumm        = null;
 let walletAddr  = null;
+// dnaAnchor: the anchor currently staged for signing (may be edited by user)
+// originalAnchor: the anchor as returned by ShatterEngine — never mutated after capture.
+// portal_demo is set true only when these differ, so the HMAC gate is bypassed
+// only for intentionally tampered anchors (for on-camera Hook rejection demos).
+// If they are equal, portal_demo is false and the full engine verification runs.
 let dnaAnchor   = null;
 let originalAnchor = null;
 let settleTxId  = null;
@@ -1374,6 +1403,14 @@ async function settle() {
     }
 }
 
+// Two-phase settle flow (April 2026):
+// Phase 1 — settle() shatters the ISO message and captures the DNA anchor from ShatterEngine.
+//            The anchor is shown in an editable input so the user can modify one character on camera.
+// Phase 2 — proceedToSign() reads the (possibly edited) anchor, hides the panel, and opens Xaman.
+//            portal_demo:true is sent only when the anchor was modified so the API skips HMAC
+//            verification and the raw tampered anchor reaches the Hook, triggering tecHOOK_REJECTED.
+//            On catch, the anchor panel is restored (not the settle button) so the user can retry
+//            without re-shattering.
 async function proceedToSign() {
     var anchorPanel = document.getElementById('dna-anchor-panel');
     var editedAnchor = document.getElementById('dna-anchor-input').value.trim().toUpperCase();
@@ -1544,7 +1581,11 @@ async function pollStatus(uuid) {
     }, 2000);
 }
 
-// ── Show rejection receipt ──
+// showRejection — called when the Hook returns tecHOOK_REJECTED or any non-tesSUCCESS result.
+// Displays ZPK_DNA_VIOLATION error code (custom, compliance-sounding) instead of raw ledger code.
+// ISO pill is reset to neutral — the ISO message was shattered but the payment never settled,
+// so showing the proof-of-existence pill in green would be misleading.
+// The receipt rows are painted red and the recover button is hidden (nothing to recover).
 function showRejection(reason) {
     var header = document.querySelector('#view-receipt .receipt-header');
     header.innerHTML = `
@@ -1603,7 +1644,9 @@ function openExplorer() {
     if (settleTxId) window.open(EXPLORER + settleTxId, '_blank');
 }
 
-// ── Reset ──
+// reset — clears all session state including originalAnchor so the next shatter
+// gets a clean baseline. Also restores the receipt header and row styles to the
+// success (green) defaults so a subsequent successful run renders correctly.
 function reset() {
     dnaAnchor  = null;
     originalAnchor = null;
