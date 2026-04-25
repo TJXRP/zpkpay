@@ -779,19 +779,22 @@ select.field-input { cursor: pointer; }
 </div>
 
 <!-- Entropography Modal Overlay -->
-<div id="entropography-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); color:#fff; z-index:10001; align-items:center; justify-content:center; text-align:center; padding:60px; font-size:18pt; font-weight:500; line-height:1.6; font-family:'Inter', sans-serif;" onclick="hideEntropography()">
-    <div style="max-width:800px; background:#fff; color:#000; padding:40px; border-radius:20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
-        <div style="font-weight:800; margin-bottom:20px; font-size:24pt; letter-spacing:-0.02em;">Entropography</div>
-        Entropography is the science of controlled entropic dispersal and reassembly of information.<br><br>
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:24px; font-family:'JetBrains Mono',monospace; font-size:14pt; text-align:left; color:#000;">
+<div id="entropography-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10001; align-items:center; justify-content:center; padding:40px; font-family:'Inter', sans-serif;" onclick="hideEntropography()">
+    <div style="max-width:800px; width:100%; background:#fff; color:#000; padding:48px 52px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.5); text-align:left;" onclick="event.stopPropagation()">
+        <div style="margin-bottom:16px;">
+            <span style="font-weight:800; font-size:26pt; letter-spacing:-0.02em; color:#111827;">Entropography</span>
+            <span style="font-size:13pt; color:#9ca3af; font-weight:400; margin-left:10px;">&middot; noun</span>
+        </div>
+        <div style="font-size:15pt; color:#111827; line-height:1.7; margin-bottom:10px;">The science of dispersing information into irretrievable entropy and reassembling it exclusively via an immutable cryptographic anchor.</div>
+        <div style="font-size:13pt; color:#6b7280; font-style:italic; margin-bottom:28px;">&ldquo;Think of it as a fancy mathematical treasure hunt&rdquo;</div>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin-bottom:28px; font-family:'JetBrains Mono',monospace; font-size:13pt; color:#111827; line-height:1.8;">
             Protocol: AIFS ZPK v1.0<br>
             Integration: Agnostic Middleware. Privacy Layer.<br>
             Method: Deterministic Entropic Dispersal &amp; Reassembly<br>
             State: Atomic Immutable File State (AIFS&trade;) · Zero Persistent Knowledge (ZPK&trade;)<br>
             Anchor: Private/Public/Substrate Ledger Notary Witness
         </div>
-        Data scatters into entropy with no persistent trace, then reassembles only on authorized demand via an immutable anchor.<br><br>
-        <strong>Entropy is the new &ldquo;data at rest&rdquo; model.</strong>
+        <strong style="font-size:14pt; color:#111827;">Entropy is a new &ldquo;data at rest&rdquo; model. ~TJ</strong>
     </div>
 </div>
 
