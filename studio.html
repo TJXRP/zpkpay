@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<!--
+  =============================================================================
+  ZPK Studio - studio.zpkpay.com
+  Repo: TJXRP/zpkpay (d:/zpkpay/) · Served from: zpkpay.com
+  DO NOT confuse with d:/aifs/public/ which serves aifs.dev
+  =============================================================================
+  MOBILE-FIRST MANDATE: All layouts designed for 375px viewport baseline.
+  Desktop is an enhancement. Never the baseline.
+  Test every change on a phone before marking anything done.
+  =============================================================================
+  ZERO PERSISTENCE MANDATE: No localStorage, sessionStorage, or cookies. Ever.
+  All state lives in JS variables only. Purged on tab close.
+  =============================================================================
+  USPTO Patent Pending: 19/551,805 · 19/560,251 · 19/564,384
+  Priority Date: February 27 2026 · Author: TJ Reynolds
+  =============================================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZPK Studio · Data Nullification Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  /* ── CSS Variables ─────────────────────────────────────────────────────── */
+  :root {
+    --bg:                   #f8f9fa;
+    --surface:              #ffffff;
+    --card-bg:              #ffffff;
+    --border:               #e0e3e7;
+    --text-primary:         #1a1d23;
+    --text-secondary:       #4a5568;
+    --text-muted:           #9ca3af;
+    --icon-color:           #495057;
+    --accent-green:         #16a34a;
+    --accent-blue:          #2563eb;
+    --btn-primary:          #0f172a;
+    --btn-primary-text:     #ffffff;
+    --tag-bg:               #f1f5f9;
+    --tag-text:             #475569;
+    --shadow:               0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:            0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+    --card-selected-bg:     #eff6ff;
+    --card-selected-border: #2563eb;
+    --radius:               12px;
+    --radius-sm:            8px;
+  }
+
+  [data-theme="dark"] {
+    /* dark mode - build out when ready */
+    --bg:                   #0f172a;
+    --surface:              #1e293b;
+    --card-bg:              #1e293b;
+    --border:               #334155;
+    --text-primary:         #f1f5f9;
+    --text-secondary:       #94a3b8;
+    --text-muted:           #64748b;
+    --icon-color:           #94a3b8;
+    --accent-green:         #4ade80;
+    --accent-blue:          #60a5fa;
+    --btn-primary:          #f1f5f9;
+    --btn-primary-text:     #0f172a;
+    --tag-bg:               #0f172a;
+    --tag-text:             #94a3b8;
+    --shadow:               0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md:            0 4px 6px rgba(0,0,0,0.4);
+    --card-selected-bg:     #1e3a5f;
+    --card-selected-border: #60a5fa;
+  }
+
+  /* ── Reset + Base ──────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  a { color: var(--accent-blue); text-decoration: none; }
+
+  /* ── Header ────────────────────────────────────────────────────────────── */
+  .studio-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .studio-logo img { height: 34px; width: auto; display: block; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .studio-wordmark {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--icon-color);
+    font-size: 18px;
+    transition: all 0.15s;
+  }
+
+  .theme-toggle:hover {
+    background: var(--bg);
+    border-color: var(--text-secondary);
+  }
+
+  /* ── Main ──────────────────────────────────────────────────────────────── */
+  .studio-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────────────────────── */
+  .studio-hero {
+    text-align: center;
+    padding: 28px 0 20px;
+  }
+
+  .studio-hero h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .studio-hero p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+  }
+
+  /* ── Section Labels ────────────────────────────────────────────────────── */
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+
+  /* ── Vertical Cards ────────────────────────────────────────────────────── */
+  .vertical-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .vertical-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .vertical-card:hover { border-color: var(--text-secondary); box-shadow: var(--shadow-md); }
+
+  .vertical-card.selected {
+    border-color: var(--card-selected-border);
+    background: var(--card-selected-bg);
+  }
+
+  .vertical-card i {
+    font-size: 28px;
+    color: var(--icon-color);
+  }
+
+  .vertical-card.selected i { color: var(--accent-blue); }
+
+  .vertical-card span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* ── Chips ─────────────────────────────────────────────────────────────── */
+  .selector-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .selector-chip {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 24px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .selector-chip:hover:not(.disabled) {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+  }
+
+  .selector-chip.selected {
+    border-color: var(--card-selected-border);
+    background: var(--card-selected-bg);
+    color: var(--accent-blue);
+  }
+
+  .selector-chip.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .chip-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* ── Payload Panel ─────────────────────────────────────────────────────── */
+  .payload-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-top: 8px;
+  }
+
+  .payload-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .payload-header img {
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  .payload-header-text h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .payload-header-text p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .payload-body { padding: 20px; }
+
+  /* ── Forms ─────────────────────────────────────────────────────────────── */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 17px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+
+  /* ── Shatter Button ────────────────────────────────────────────────────── */
+  .btn-shatter {
+    width: 100%;
+    background: var(--btn-primary);
+    color: var(--btn-primary-text);
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-shatter:hover { opacity: 0.88; }
+  .btn-shatter:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Result Panel ──────────────────────────────────────────────────────── */
+  .result-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-top: 16px;
+    display: none;
+    box-shadow: var(--shadow);
+  }
+
+  .result-panel.visible { display: block; }
+
+  .result-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .result-status i { font-size: 24px; color: var(--accent-green); }
+
+  .result-status h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .anchor-display {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .anchor-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .anchor-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.06em;
+    word-break: break-all;
+  }
+
+  .receipt-rows { display: flex; flex-direction: column; gap: 0; }
+
+  .receipt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .receipt-row:last-child { border-bottom: none; }
+  .receipt-row .label { color: var(--text-muted); font-weight: 500; flex-shrink: 0; }
+  .receipt-row .value { color: var(--text-primary); font-weight: 600; text-align: right; word-break: break-all; }
+
+  .result-note {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── Footer ────────────────────────────────────────────────────────────── */
+  .studio-footer {
+    text-align: center;
+    padding: 28px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  /* ── Responsive ────────────────────────────────────────────────────────── */
+  @media (min-width: 600px) {
+    .vertical-grid { grid-template-columns: repeat(4, 1fr); }
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .studio-hero h1 { font-size: 30px; }
+  }
+
+  @media (min-width: 960px) {
+    .studio-main { padding: 32px 24px 80px; }
+    .payload-header img { width: 64px; height: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="studio-header">
+  <a href="https://zpkpay.com">
+    <img src="img/zpk-logo-black.png" alt="ZPK Pay" style="height:34px;">
+  </a>
+  <div class="header-right">
+    <span class="studio-wordmark">Studio</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <i class="bi bi-sun" id="themeIcon"></i>
+    </button>
+  </div>
+</header>
+
+<main class="studio-main">
+
+  <div class="studio-hero">
+    <h1>The Data Nullification Engine</h1>
+    <p>Any data. Any chain. Any auth. One 24-character anchor is all that remains.</p>
+  </div>
+
+  <!-- Step 1: Vertical -->
+  <div class="section-label">What are you protecting?</div>
+  <div class="vertical-grid">
+    <div class="vertical-card selected" data-vertical="healthcare" onclick="selectVertical(this)">
+      <i class="bi bi-heart-pulse"></i>
+      <span>Healthcare</span>
+    </div>
+    <div class="vertical-card" data-vertical="iso" onclick="selectVertical(this)">
+      <i class="bi bi-bank"></i>
+      <span>ISO Payments</span>
+    </div>
+    <div class="vertical-card" data-vertical="legal" onclick="selectVertical(this)">
+      <i class="bi bi-file-earmark-text"></i>
+      <span>Legal</span>
+    </div>
+    <div class="vertical-card" data-vertical="government" onclick="selectVertical(this)">
+      <i class="bi bi-building"></i>
+      <span>Government</span>
+    </div>
+    <div class="vertical-card" data-vertical="files" onclick="selectVertical(this)">
+      <i class="bi bi-folder2-open"></i>
+      <span>Files</span>
+    </div>
+    <div class="vertical-card" data-vertical="clinical" onclick="selectVertical(this)">
+      <i class="bi bi-capsule"></i>
+      <span>Clinical Trials</span>
+    </div>
+    <div class="vertical-card" data-vertical="auth" onclick="selectVertical(this)">
+      <i class="bi bi-shield-lock"></i>
+      <span>Authentication</span>
+    </div>
+    <div class="vertical-card" data-vertical="ma" onclick="selectVertical(this)">
+      <i class="bi bi-briefcase"></i>
+      <span>M&amp;A</span>
+    </div>
+  </div>
+
+  <!-- Step 2: Chain -->
+  <div class="section-label">Chain</div>
+  <div class="selector-row" id="chainRow">
+    <div class="selector-chip disabled" data-chain="midnight" onclick="selectChip(this,'chain')">
+      <i class="bi bi-moon-stars"></i> Cardano · Midnight
+      <span class="chip-badge">Pilot</span>
+    </div>
+    <div class="selector-chip selected" data-chain="xahau" onclick="selectChip(this,'chain')">
+      <i class="bi bi-lightning-charge"></i> Xahau
+      <span class="chip-badge">Live</span>
+    </div>
+    <div class="selector-chip disabled" data-chain="xrpl" onclick="selectChip(this,'chain')">
+      <i class="bi bi-circle"></i> XRPL
+      <span class="chip-badge">Soon</span>
+    </div>
+    <div class="selector-chip disabled" data-chain="base" onclick="selectChip(this,'chain')">
+      <i class="bi bi-hexagon"></i> Base · ETH
+      <span class="chip-badge">Soon</span>
+    </div>
+  </div>
+
+  <!-- Step 3: Auth -->
+  <div class="section-label">Auth</div>
+  <div class="selector-row" id="authRow">
+    <div class="selector-chip selected" data-auth="xaman" onclick="selectChip(this,'auth')">
+      <i class="bi bi-wallet2"></i> Xaman Wallet
+      <span class="chip-badge">Live</span>
+    </div>
+    <div class="selector-chip disabled" data-auth="walletconnect" onclick="selectChip(this,'auth')">
+      <i class="bi bi-phone"></i> WalletConnect
+      <span class="chip-badge">Soon</span>
+    </div>
+    <div class="selector-chip disabled" data-auth="multisig" onclick="selectChip(this,'auth')">
+      <i class="bi bi-people"></i> Multi-sig
+      <span class="chip-badge">Soon</span>
+    </div>
+    <div class="selector-chip disabled" data-auth="hardware" onclick="selectChip(this,'auth')">
+      <i class="bi bi-usb-drive"></i> Hardware Key
+      <span class="chip-badge">Soon</span>
+    </div>
+  </div>
+
+  <!-- Step 4: Payload -->
+  <div class="section-label" style="margin-top:32px;">Your payload</div>
+  <div class="payload-panel">
+    <div class="payload-header">
+      <img src="img/vertical-healthcare.png" alt="" id="verticalImage">
+      <div class="payload-header-text">
+        <h3 id="verticalTitle">Healthcare Record</h3>
+        <p id="verticalSubtitle">HIPAA-compliant · zero persistent storage · mathematically sealed</p>
+      </div>
+    </div>
+    <div class="payload-body" id="payloadBody">
+
+      <!-- Healthcare -->
+      <div id="form-healthcare">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Patient Reference</label>
+            <input type="text" id="hc-patient" placeholder="PAT-2026-0001" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Record Type</label>
+            <select id="hc-type">
+              <option>Lab Results</option>
+              <option>Prescription</option>
+              <option>Imaging Report</option>
+              <option>Clinical Notes</option>
+              <option>Discharge Summary</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Provider</label>
+            <input type="text" id="hc-provider" placeholder="Johns Hopkins Medical Center" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Attending Physician</label>
+            <input type="text" id="hc-physician" placeholder="Dr. Sarah Chen" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Record Content</label>
+          <textarea id="hc-content" placeholder="Paste record content, notes, or findings here..."></textarea>
+        </div>
+      </div>
+
+      <!-- ISO Payments -->
+      <div id="form-iso" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Message ID</label>
+            <input type="text" id="iso-msgid" placeholder="MSG-ID-001" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Message Type</label>
+            <select id="iso-type">
+              <option>pacs.008 - FI Credit Transfer</option>
+              <option>pacs.009 - Financial Institution Transfer</option>
+              <option>pain.001 - Customer Credit Transfer</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Debtor Name</label>
+            <input type="text" id="iso-debtor" placeholder="Acme Capital Group LLC" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Creditor Name</label>
+            <input type="text" id="iso-creditor" placeholder="Zurich Structured Finance GmbH" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount</label>
+            <input type="text" id="iso-amount" placeholder="1,250,000.00 USD" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Settlement Date</label>
+            <input type="date" id="iso-date">
+          </div>
+        </div>
+      </div>
+
+      <!-- Legal -->
+      <div id="form-legal" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Document Title</label>
+            <input type="text" id="legal-title" placeholder="Non-Disclosure Agreement - Series B" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Document Type</label>
+            <select id="legal-type">
+              <option>Non-Disclosure Agreement</option>
+              <option>Term Sheet</option>
+              <option>Shareholder Agreement</option>
+              <option>Settlement Agreement</option>
+              <option>Court Filing</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Document Content</label>
+          <textarea id="legal-content" placeholder="Paste document text here..."></textarea>
+        </div>
+      </div>
+
+      <!-- Files -->
+      <div id="form-files" style="display:none;">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Drop a file, paste text, or select below</label>
+          <div id="dropzone" style="
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 15px;
+            transition: border-color 0.15s;
+          " ondragover="event.preventDefault();this.style.borderColor='var(--accent-blue)'"
+             ondragleave="this.style.borderColor='var(--border)'"
+             ondrop="handleDrop(event)"
+             onclick="document.getElementById('fileInput').click()">
+            <i class="bi bi-cloud-upload" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+            Drag and drop · or tap to browse
+          </div>
+          <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div class="form-group">
+          <label>Or paste text directly</label>
+          <textarea id="file-text" placeholder="Paste any text content here..."></textarea>
+        </div>
+        <div id="file-name" style="font-size:13px;color:var(--text-muted);margin-top:6px;"></div>
+      </div>
+
+      <!-- Placeholder for remaining verticals -->
+      <div id="form-government" style="display:none;">
+        <p style="color:var(--text-muted);font-size:14px;padding:8px 0;">Government record form - coming next session.</p>
+      </div>
+      <div id="form-clinical" style="display:none;">
+        <p style="color:var(--text-muted);font-size:14px;padding:8px 0;">Clinical trial form - coming next session.</p>
+      </div>
+      <div id="form-auth" style="display:none;">
+        <p style="color:var(--text-muted);font-size:14px;padding:8px 0;">Zero knowledge authentication form - coming next session.</p>
+      </div>
+      <div id="form-ma" style="display:none;">
+        <p style="color:var(--text-muted);font-size:14px;padding:8px 0;">M&amp;A due diligence form - coming next session.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="btn-shatter" id="shatterBtn" onclick="runShatter()">
+    <i class="bi bi-lightning-charge-fill"></i>
+    Shatter &amp; Anchor
+  </button>
+
+  <!-- Result -->
+  <div class="result-panel" id="resultPanel">
+    <div class="result-status">
+      <i class="bi bi-check-circle-fill"></i>
+      <h3>Nullified. Nothing stored.</h3>
+    </div>
+    <div class="anchor-display">
+      <div class="anchor-label">DNA Anchor</div>
+      <div class="anchor-value" id="anchorValue">-</div>
+    </div>
+    <div class="receipt-rows">
+      <div class="receipt-row">
+        <span class="label">Vertical</span>
+        <span class="value" id="receiptVertical">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Chain</span>
+        <span class="value" id="receiptChain">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Arweave</span>
+        <span class="value" id="receiptArweave">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Disk written</span>
+        <span class="value">0 bytes</span>
+      </div>
+    </div>
+    <p class="result-note">
+      The anchor is the only artifact. The data no longer exists in any recoverable form without it.
+      To settle onchain with Hook enforcement, use the
+      <a href="portal.html">ZPKPay portal</a>.
+    </p>
+  </div>
+
+</main>
+
+<footer class="studio-footer">
+  ZPK™ · Zero Persistent Knowledge · USPTO 19/551,805 · 19/560,251 · 19/564,384 · Demo only · &copy; 2026 ZPKPay
+</footer>
+
+<script>
+// State - RAM only. No localStorage. No cookies. No persistence. Ever.
+let currentVertical = 'healthcare';
+let currentChain    = 'xahau';
+let currentAuth     = 'xaman';
+let filePayload     = null;
+
+const API = 'https://api.aifs.dev/api/v1';
+
+const VERTICALS = {
+  healthcare: { title: 'Healthcare Record',         subtitle: 'HIPAA-compliant · zero persistent storage · mathematically sealed',           img: 'img/vertical-healthcare.png' },
+  iso:        { title: 'ISO 20022 Payment Message', subtitle: 'pacs.008 · FI credit transfer · Xahau Hook enforcement',                      img: 'img/vertical-iso.png'        },
+  legal:      { title: 'Legal Document',            subtitle: 'Sealed delivery · multi-party threshold · immutable audit trail',              img: 'img/vertical-legal.png'      },
+  government: { title: 'Government Record',         subtitle: 'Jurisdictional distribution · zero persistent exposure',                       img: 'img/vertical-government.png' },
+  files:      { title: 'File Storage',              subtitle: 'Any format · any size · zero liability on storage provider',                   img: 'img/vertical-files.png'      },
+  clinical:   { title: 'Clinical Trial Data',       subtitle: 'Pharmaceutical compliance · FDA audit trail · participant privacy',            img: 'img/vertical-clinical.png'   },
+  auth:       { title: 'Zero Knowledge Auth',       subtitle: 'No credential database · identity shattered at login · nothing to steal',      img: 'img/vertical-auth.png'       },
+  ma:         { title: 'M&A Due Diligence',         subtitle: 'Sovereign document sharing · forensic audit trail · time-locked access',       img: 'img/vertical-ma.png'         }
+};
+
+const CHAIN_LABELS = {
+  xahau:    'Xahau · Hook enforcement live',
+  midnight: 'Cardano · Midnight',
+  xrpl:     'XRPL Mainnet',
+  base:     'Base · Ethereum'
+};
+
+function selectVertical(card) {
+  document.querySelectorAll('.vertical-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  currentVertical = card.dataset.vertical;
+
+  const cfg = VERTICALS[currentVertical];
+  document.getElementById('verticalTitle').textContent    = cfg.title;
+  document.getElementById('verticalSubtitle').textContent = cfg.subtitle;
+
+  const img    = document.getElementById('verticalImage');
+  const probe  = new Image();
+  probe.onload  = () => { img.src = cfg.img; };
+  probe.onerror = () => { img.src = 'img/vertical-healthcare.png'; };
+  probe.src = cfg.img;
+
+  document.querySelectorAll('[id^="form-"]').forEach(f => { f.style.display = 'none'; });
+  const form = document.getElementById('form-' + currentVertical);
+  if (form) form.style.display = 'block';
+
+  hideResult();
+}
+
+function selectChip(chip, group) {
+  if (chip.classList.contains('disabled')) return;
+  document.querySelectorAll('#' + group + 'Row .selector-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+  if (group === 'chain') currentChain = chip.dataset.chain;
+  if (group === 'auth')  currentAuth  = chip.dataset.auth;
+  hideResult();
+}
+
+// Dark mode toggle - no localStorage per zero persistence mandate
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme   = dark ? 'light' : 'dark';
+  document.getElementById('themeIcon').className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
+});
+
+// File handling
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) readFile(file);
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    filePayload = e.target.result;
+    document.getElementById('file-name').textContent = file.name + ' · ' + (file.size / 1024).toFixed(1) + ' KB loaded';
+  };
+  reader.readAsText(file);
+}
+
+function buildPayload() {
+  if (currentVertical === 'healthcare') {
+    return JSON.stringify({
+      vertical:  'healthcare',
+      patient:   document.getElementById('hc-patient').value,
+      type:      document.getElementById('hc-type').value,
+      provider:  document.getElementById('hc-provider').value,
+      physician: document.getElementById('hc-physician').value,
+      content:   document.getElementById('hc-content').value,
+      ts:        new Date().toISOString()
+    });
+  }
+  if (currentVertical === 'iso') {
+    return JSON.stringify({
+      vertical:  'iso',
+      msgId:     document.getElementById('iso-msgid').value,
+      type:      document.getElementById('iso-type').value,
+      debtor:    document.getElementById('iso-debtor').value,
+      creditor:  document.getElementById('iso-creditor').value,
+      amount:    document.getElementById('iso-amount').value,
+      date:      document.getElementById('iso-date').value,
+      ts:        new Date().toISOString()
+    });
+  }
+  if (currentVertical === 'legal') {
+    return JSON.stringify({
+      vertical: 'legal',
+      title:    document.getElementById('legal-title').value,
+      type:     document.getElementById('legal-type').value,
+      content:  document.getElementById('legal-content').value,
+      ts:       new Date().toISOString()
+    });
+  }
+  if (currentVertical === 'files') {
+    const text = filePayload || document.getElementById('file-text').value;
+    return JSON.stringify({ vertical: 'files', content: text, ts: new Date().toISOString() });
+  }
+  return JSON.stringify({ vertical: currentVertical, ts: new Date().toISOString() });
+}
+
+async function runShatter() {
+  const btn = document.getElementById('shatterBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Shattering...';
+  hideResult();
+
+  try {
+    const res = await fetch(API + '/liquify', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        manifest:      buildPayload(),
+        originAddress: 'rZPKStudioDemo000000000000000000',
+        metadata:      { vertical: currentVertical, chain: currentChain }
+      })
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Shatter failed');
+    showResult(data);
+  } catch (err) {
+    alert('Shatter failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Shatter &amp; Anchor';
+  }
+}
+
+function showResult(data) {
+  document.getElementById('anchorValue').textContent    = data.dna || '-';
+  document.getElementById('receiptVertical').textContent = VERTICALS[currentVertical].title;
+  document.getElementById('receiptChain').textContent   = CHAIN_LABELS[currentChain] || currentChain;
+  document.getElementById('receiptArweave').textContent = data.arweaveId
+    ? data.arweaveId.substring(0, 20) + '...'
+    : 'Pending indexer';
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideResult() {
+  document.getElementById('resultPanel').classList.remove('visible');
+}
+</script>
+</body>
+</html>
