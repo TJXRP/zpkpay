@@ -144,6 +144,34 @@
     padding: 24px 16px 60px;
   }
 
+  /* ── Hero ──────────────────────────────────────────────────────────────── */
+  .studio-hero {
+    text-align: center;
+    padding: 28px 0 20px;
+  }
+
+  .studio-hero h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .studio-hero .hero-tagline {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 520px;
+    margin: 0 auto 10px;
+  }
+
+  .studio-hero .hero-compliance {
+    font-size: 13px;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
   /* ── Section Labels ────────────────────────────────────────────────────── */
   .section-label {
     font-size: 13px;
@@ -260,13 +288,6 @@
 
   .payload-header {
     border-bottom: 1px solid var(--border);
-  }
-
-  .payload-header img {
-    width: 20%;
-    height: auto;
-    display: block;
-    padding: 16px 20px;
   }
 
   .payload-header-text {
@@ -472,8 +493,14 @@
 
 <main class="studio-main">
 
+  <div class="studio-hero">
+    <h1>Zero Persistent Knowledge</h1>
+    <p class="hero-tagline">Offramp your liability to the protocol.</p>
+    <p class="hero-compliance">Designed for HIPAA · GDPR · CCPA · SOX · PCI DSS · GLBA · FDA 21 CFR Part 11 · FISMA · FERPA · PIPEDA · ISO 27001 · HITECH compliance.</p>
+  </div>
+
   <!-- Step 1: Vertical -->
-  <div class="section-label">What are you protecting?</div>
+  <div class="section-label">Choose your vertical market</div>
   <div class="vertical-grid">
     <div class="vertical-card selected" data-vertical="healthcare" onclick="selectVertical(this)">
       <i class="bi bi-heart-pulse"></i>
@@ -555,7 +582,6 @@
   <div class="section-label" style="margin-top:32px;">Your payload</div>
   <div class="payload-panel">
     <div class="payload-header">
-      <img src="img/vertical-healthcare.png" alt="" id="verticalImage">
       <div class="payload-header-text">
         <h3 id="verticalTitle">Healthcare Record</h3>
         <p id="verticalSubtitle">HIPAA-compliant · zero persistent storage · mathematically sealed</p>
@@ -787,12 +813,6 @@ function selectVertical(card) {
   const cfg = VERTICALS[currentVertical];
   document.getElementById('verticalTitle').textContent    = cfg.title;
   document.getElementById('verticalSubtitle').textContent = cfg.subtitle;
-
-  const img    = document.getElementById('verticalImage');
-  const probe  = new Image();
-  probe.onload  = () => { img.src = cfg.img; };
-  probe.onerror = () => { img.src = 'img/vertical-healthcare.png'; };
-  probe.src = cfg.img;
 
   document.querySelectorAll('[id^="form-"]').forEach(f => { f.style.display = 'none'; });
   const form = document.getElementById('form-' + currentVertical);
