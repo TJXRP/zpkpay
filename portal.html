@@ -838,18 +838,20 @@ function hideHooks() { document.getElementById('hooks-overlay').style.display = 
 
 // ── Circular countdown timer ──
 var _cdTimers = {};
-function startCountdown(fillId, textId, seconds) {
+function startCountdown(fillId, textId, seconds, opts) {
     if (_cdTimers[fillId]) clearInterval(_cdTimers[fillId]);
     var total = seconds, remaining = seconds;
-    var circumference = 175.9;
+    var circumference = (opts && opts.circumference) ? opts.circumference : 175.9;
+    var colorNormal = (opts && opts.color) ? opts.color : 'var(--orange)';
     var fill = document.getElementById(fillId);
     var text = document.getElementById(textId);
     function tick() {
         var pct = remaining / total;
         fill.style.strokeDashoffset = circumference * (1 - pct);
-        fill.style.stroke = remaining > 60 ? 'var(--orange)' : 'var(--red)';
+        fill.style.stroke = remaining > 60 ? colorNormal : 'var(--red)';
         var m = Math.floor(remaining / 60), s = remaining % 60;
         text.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        if (opts && opts.textEl) opts.textEl.style.color = remaining > 60 ? colorNormal : 'var(--red)';
         if (remaining <= 0) { clearInterval(_cdTimers[fillId]); return; }
         remaining--;
     }
@@ -1136,7 +1138,7 @@ window.addEventListener('keydown', (e) => {
                 </div>
                 <input id="dna-anchor-input" type="text" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:600;color:#dc2626;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 14px;letter-spacing:0.08em;" maxlength="24" spellcheck="false">
                 <div style="font-size:10.5pt;color:#64748b;margin-top:5px;">Edit any character above to simulate a non-compliant message. The Hook will reject it.</div>
-                <button class="btn-settle" onclick="proceedToSign()" style="margin-top:14px;">Sign &amp; Settle in Xaman &rarr;</button>
+                <button class="btn-settle" onclick="proceedToSign()" style="margin-top:14px;background:#16a34a;">Sign &amp; Settle in Xaman &rarr;</button>
             </div>
 
             <button class="btn-secondary" onclick="goBack()">Back</button>
@@ -1200,14 +1202,16 @@ window.addEventListener('keydown', (e) => {
     <div class="modal">
         <div class="modal-title">&middot; Post Payment<br>&middot; Anchor Message</div>
         <div class="modal-sub">Scan with Xaman to post the Xahau payment and permanently anchor the ISO 20022 message to the ledger.</div>
-        <div class="qr-wrap"><div id="portal-qr"></div></div>
-        <div class="modal-countdown">
-          <svg class="countdown-svg" width="64" height="64" viewBox="0 0 64 64">
-            <circle class="countdown-track" cx="32" cy="32" r="28"/>
-            <circle class="countdown-fill" id="cd2-fill" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/>
-            <text class="countdown-text" id="cd2-text" x="32" y="34" transform="rotate(90,32,32)">5:00</text>
+        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:240px;height:240px;margin:12px auto;">
+          <svg width="240" height="240" style="position:absolute;top:0;left:0;z-index:0;">
+            <circle cx="120" cy="120" r="112" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+            <circle id="cd2-fill" cx="120" cy="120" r="112" fill="none" stroke="#16a34a" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="703.7" stroke-dashoffset="0"
+              transform="rotate(-90 120 120)" style="transition:stroke-dashoffset 1s linear;"/>
           </svg>
+          <div id="portal-qr" style="position:relative;z-index:1;width:196px;height:196px;display:flex;align-items:center;justify-content:center;"></div>
         </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:700;color:#16a34a;margin-bottom:8px;" id="cd2-text">5:00</div>
         <div class="modal-status" id="modal-status">Waiting for signature...</div>
         <button class="btn-modal-cancel" onclick="cancelModal()">Cancel</button>
         <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
@@ -1591,13 +1595,13 @@ function toHex(str) {
 function openModal(qrUrl, uuid) {
     var overlay = document.getElementById('modal-overlay');
     overlay.classList.add('open');
-    startCountdown('cd2-fill', 'cd2-text', 300);
+    startCountdown('cd2-fill', 'cd2-text', 300, { circumference: 703.7, color: '#16a34a', textEl: document.getElementById('cd2-text') });
     var qrDiv = document.getElementById('portal-qr');
     qrDiv.innerHTML = '';
     if (qrUrl && qrUrl.startsWith('http')) {
         var img = document.createElement('img');
         img.src = qrUrl;
-        img.style.cssText = 'width:200px;height:200px;border-radius:8px;';
+        img.style.cssText = 'width:190px;height:190px;border-radius:8px;';
         qrDiv.appendChild(img);
     }
     pollStatus(uuid);
