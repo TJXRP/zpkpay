@@ -1183,14 +1183,17 @@ window.addEventListener('keydown', (e) => {
     <div class="modal">
         <div class="modal-title">Bind Sender to TX</div>
         <div class="modal-sub">Scan with Xaman to bind your identity to the transaction. No payment will be sent.</div>
-        <div class="qr-wrap"><div id="connect-qr"></div></div>
-        <div class="modal-countdown">
-          <svg class="countdown-svg" width="64" height="64" viewBox="0 0 64 64">
-            <circle class="countdown-track" cx="32" cy="32" r="28"/>
-            <circle class="countdown-fill" id="cd1-fill" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/>
-            <text class="countdown-text" id="cd1-text" x="32" y="34" transform="rotate(90,32,32)">5:00</text>
+        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:240px;height:240px;margin:12px auto;">
+          <svg width="240" height="240" style="position:absolute;top:0;left:0;z-index:0;">
+            <circle cx="120" cy="120" r="112" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+            <circle id="cd1-fill" cx="120" cy="120" r="112" fill="none" stroke="#16a34a" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="703.7" stroke-dashoffset="0"
+              transform="rotate(-90 120 120)" style="transition:stroke-dashoffset 1s linear;"/>
+            <text x="120" y="234" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="700" fill="#16a34a" opacity="0.5" letter-spacing="3">ZPK</text>
           </svg>
+          <div id="connect-qr" style="position:relative;z-index:1;width:196px;height:196px;display:flex;align-items:center;justify-content:center;"></div>
         </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:700;color:#16a34a;margin-bottom:8px;" id="cd1-text">5:00</div>
         <div class="modal-status" id="connect-status">Waiting for scan...</div>
         <button class="btn-modal-cancel" onclick="cancelConnect()">Cancel</button>
         <div style="font-style:italic;font-size:12pt;color:var(--mu);margin-top:16px;">powered by: ZPK&trade;</div>
@@ -1208,6 +1211,7 @@ window.addEventListener('keydown', (e) => {
             <circle id="cd2-fill" cx="120" cy="120" r="112" fill="none" stroke="#16a34a" stroke-width="8"
               stroke-linecap="round" stroke-dasharray="703.7" stroke-dashoffset="0"
               transform="rotate(-90 120 120)" style="transition:stroke-dashoffset 1s linear;"/>
+            <text x="120" y="234" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="700" fill="#16a34a" opacity="0.5" letter-spacing="3">ZPK</text>
           </svg>
           <div id="portal-qr" style="position:relative;z-index:1;width:196px;height:196px;display:flex;align-items:center;justify-content:center;"></div>
         </div>
@@ -1331,13 +1335,13 @@ async function connectWallet() {
         // Show connect modal with QR
         var overlay = document.getElementById('connect-overlay');
         overlay.classList.add('open');
-        startCountdown('cd1-fill', 'cd1-text', 300);
+        startCountdown('cd1-fill', 'cd1-text', 300, { circumference: 703.7, color: '#16a34a', textEl: document.getElementById('cd1-text') });
         var qrDiv = document.getElementById('connect-qr');
         qrDiv.innerHTML = '';
         if (data.qrUrl && data.qrUrl.startsWith('http')) {
             var img = document.createElement('img');
             img.src = data.qrUrl;
-            img.style.cssText = 'width:200px;height:200px;border-radius:8px;';
+            img.style.cssText = 'width:190px;height:190px;border-radius:8px;';
             qrDiv.appendChild(img);
         }
 
