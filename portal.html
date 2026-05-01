@@ -194,9 +194,7 @@ body::before {
     z-index: 1;
 }
 .card {
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 2px 16px rgba(0,0,0,.10);
     width: 80%;
@@ -206,7 +204,7 @@ body::before {
 
 /* ── Card header ── */
 .card-header {
-    background: transparent;
+    background: var(--sur);
     padding: 28px 40px 20px;
     border-bottom: 1px solid var(--brd);
 }
@@ -714,10 +712,8 @@ select.field-input { cursor: pointer; }
     padding: 20px;
     font-size: 11pt;
     color: var(--di);
-    border-top: 1px solid var(--brd);
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border-top: none;
+    background: transparent;
     position: relative;
     z-index: 300;
 }
