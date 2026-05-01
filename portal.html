@@ -1360,15 +1360,16 @@ window.addEventListener('keydown', (e) => {
 
 <!-- Welcome Modal -->
 <div id="welcome-overlay" onclick="hideWelcome()" style="display:none;position:fixed;inset:0;z-index:20000;align-items:center;justify-content:center;padding:60px 80px;cursor:pointer;overflow:hidden;">
-  <div style="position:absolute;inset:-50%;width:200%;height:200%;background:url('img/space-bkg.jpg') center center/cover no-repeat;transform:rotate(22deg);opacity:0.7;pointer-events:none;"></div>
-  <div style="position:absolute;inset:0;background:rgba(10,15,28,0.75);pointer-events:none;"></div>
+  <div style="position:absolute;inset:0;background:#000000;pointer-events:none;"></div>
   <canvas id="welcome-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:1;"></canvas>
   <div onclick="event.stopPropagation()" style="max-width:860px;width:100%;position:relative;z-index:2;font-family:'Inter',sans-serif;color:#ffffff;">
-    <img src="img/zpk-logo-black.png" alt="ZPK" style="height:65px;width:auto;margin-bottom:44px;filter:invert(1);">
-    <p style="font-size:20pt;font-weight:300;color:#94a3b8;margin-bottom:20px;">What you are about to witness is</p>
-    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:12px;">&middot; The fusion of payments and ISO messaging</p>
-    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:36px;">&middot; A payment that cannot settle without a compliant ISO 20022 message</p>
-    <p style="font-size:15pt;color:#cbd5e1;margin-bottom:28px;">Spend a few minutes and see Zero Persistent Knowledge in action.</p>
+    <img src="img/zpk-logo-black.png" alt="ZPK" style="height:100px;width:auto;margin-bottom:44px;filter:invert(1);">
+    <p style="font-size:20pt;font-weight:300;color:#94a3b8;margin-bottom:20px;">What if&hellip;</p>
+    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:12px;">&middot; Payments and ISO 20022 messages were inseparably fused and settled with quantum-proof privacy at ledger velocity?</p>
+    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:12px;">&middot; There was no ciphertext · no keys to lose, no encryption to break?</p>
+    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:12px;">&middot; PII, EHR, and PHI compliance was built-in with Entropy rather than Encryption?</p>
+    <p style="font-size:17pt;line-height:1.75;color:#e2e8f0;margin-bottom:36px;">&middot; The system was lightweight, auditable forever, and mathematically impossible to breach?</p>
+    <p style="font-size:15pt;color:#cbd5e1;margin-bottom:28px;">Here is our Entropic Dispersal and Reassembly Alpha Prototype.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:40px;">
       <span style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 14px;font-size:12pt;color:#94a3b8;">Shatter</span>
       <span style="color:#475569;font-size:14pt;line-height:2;">|</span>
