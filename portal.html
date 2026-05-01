@@ -750,7 +750,7 @@ select.field-input { cursor: pointer; }
 <div class="topbar">
     <div class="topbar-left">
         <div class="bank-logo" style="background:transparent; border:none; display:flex; align-items:center; justify-content:center;">
-            <img src="img/zpk-logo-black.png" alt="ZPK" style="height:56px;width:auto;">
+            <img src="img/zpk-logo-black.png" alt="ZPK" style="height:56px;width:auto;cursor:pointer;" onclick="showCloser()" title="">
         </div>
         <div>
             <div class="bank-sub"><span class="zpk-trigger" onclick="showZPKTooltip()">NO SSD?</span> · <span class="zpk-trigger" onclick="showEntropography()">Nullography</span> · <span class="zpk-trigger" onclick="showHooks()">Hooks</span></div>
@@ -833,6 +833,8 @@ select.field-input { cursor: pointer; }
 <script>
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
+function showCloser() { const el = document.getElementById('closer-overlay'); el.style.display = 'flex'; }
+function hideCloser() { document.getElementById('closer-overlay').style.display = 'none'; }
 function showEntropography() { document.getElementById('entropography-overlay').style.display = 'flex'; }
 function hideEntropography() { document.getElementById('entropography-overlay').style.display = 'none'; }
 function showHooks() { document.getElementById('hooks-overlay').style.display = 'flex'; }
@@ -1230,6 +1232,30 @@ window.addEventListener('keydown', (e) => {
 <!-- Footer -->
 <div class="footer">
     <span style="background:rgba(128,128,128,0.8);border-radius:4px;padding:2px 8px;">ZPKPay &nbsp;·&nbsp; AIFS Protocol Inc. &nbsp;·&nbsp; aifs.dev</span>
+</div>
+
+<!-- Closer Modal -->
+<div id="closer-overlay" onclick="hideCloser()" style="display:none;position:fixed;inset:0;background:#0a0f1c;z-index:20000;align-items:center;justify-content:center;padding:60px 80px;cursor:pointer;">
+  <div onclick="event.stopPropagation()" style="max-width:900px;width:100%;position:relative;">
+    <img src="img/zpk-logo-black.png" alt="ZPK" style="height:65px;width:auto;margin-bottom:48px;filter:invert(1);">
+    <div style="font-family:'Inter',sans-serif;color:#ffffff;">
+      <p style="font-size:19pt;line-height:1.7;margin-bottom:28px;color:#e2e8f0;">What you have just witnessed is the fusion of an ISO 20022 message and a payment into a single inseparable transaction.</p>
+      <p style="font-size:15pt;line-height:1.7;margin-bottom:20px;color:#cbd5e1;">The payment and the message are one. They cannot be separated, reordered, or spoofed.</p>
+      <p style="font-size:15pt;line-height:1.7;margin-bottom:20px;color:#cbd5e1;">A ZPK-Enforcer Hook is integrated directly into the receiving address. It is mathematically impossible for the payment to settle without a compliant message. The Xahau Ledger examined the DNA Anchor embedded in the transaction and returned one word: <strong style="color:#ef4444;">rejected.</strong></p>
+      <p style="font-size:15pt;line-height:1.7;margin-bottom:20px;color:#cbd5e1;">The second payment succeeded. <strong style="color:#ffffff;">Failure is an option</strong> - and in ZPK, failure is the proof the system works.</p>
+      <p style="font-size:15pt;line-height:1.7;margin-bottom:20px;color:#cbd5e1;">Compliance is not a process. It is a mathematical property of the transaction itself.</p>
+      <p style="font-size:15pt;line-height:1.7;margin-bottom:36px;color:#cbd5e1;">The message never touched a server. It was never written to disk. It existed in RAM for the duration of one confirmation window, and then it was purged.</p>
+      <p style="font-size:22pt;font-weight:800;color:#ffffff;margin-bottom:8px;">This is ZPK&#8482; &middot; Zero Persistent Knowledge.</p>
+      <p style="font-size:12pt;color:#64748b;margin-bottom:40px;letter-spacing:0.3px;">Patent Pending &nbsp;·&nbsp; USPTO 19/551,805 &nbsp;·&nbsp; 19/560,251 &nbsp;·&nbsp; 19/564,384 &nbsp;·&nbsp; 64/040,051</p>
+      <div style="border-top:1px solid #1e293b;padding-top:32px;display:flex;align-items:center;gap:16px;">
+        <span style="font-size:13pt;color:#64748b;">Questions or partnerships:</span>
+        <a href="https://x.com/ElectroNickels" target="_blank" onclick="event.stopPropagation()" style="font-size:15pt;font-weight:700;color:#ffffff;text-decoration:none;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18pt;">&#9889;</span> DM @ElectroNickels
+        </a>
+      </div>
+    </div>
+    <button onclick="hideCloser()" style="position:absolute;top:-20px;right:-20px;background:none;border:none;color:#475569;font-size:22pt;cursor:pointer;line-height:1;">&times;</button>
+  </div>
 </div>
 
 <script>
