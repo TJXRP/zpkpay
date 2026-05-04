@@ -845,11 +845,12 @@ select.field-input { cursor: pointer; }
 <script>
 function showZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'flex'; }
 function hideZPKTooltip() { document.getElementById('zpk-full-overlay').style.display = 'none'; }
-let _closerStarActive = false;
+let _closerStarActive = false, _closerBurstReset = null;
 function showCloser() {
   const el = document.getElementById('closer-overlay');
   el.style.display = 'flex';
   if (!_closerStarActive) { _closerStarActive = true; _initCloserStars(); }
+  else if (_closerBurstReset) { _closerBurstReset(); }
 }
 function hideCloser() { document.getElementById('closer-overlay').style.display = 'none'; }
 function _initCloserStars() {
@@ -857,9 +858,9 @@ function _initCloserStars() {
   const cx = cv.getContext('2d');
   function resize() { cv.width = window.innerWidth; cv.height = window.innerHeight; }
   resize(); window.addEventListener('resize', resize);
-  let stars = [], timer = 0, nextSpawn = 8, burst = 0;
-  const BURST = 4;
-  function rSpawn() { return 420 + Math.floor(Math.random() * 480); }
+  let stars = [], timer = 0, nextSpawn = 4, burst = 0;
+  const BURST = 14;
+  function rSpawn() { return 140 + Math.floor(Math.random() * 180); }
   class CStar {
     constructor() {
       this.x=Math.random()*cv.width*0.75; this.y=Math.random()*cv.height*0.35;
@@ -898,21 +899,26 @@ function _initCloserStars() {
       cx.beginPath();cx.arc(this.x,this.y,4+burn*3,0,Math.PI*2);cx.fillStyle=g;cx.fill();
     }
   }
+  _closerBurstReset = function() {
+    burst = 0; timer = 0; nextSpawn = 4;
+    for(let i=0;i<4;i++) stars.push(new CStar());
+  };
   function anim() {
     cx.clearRect(0,0,cv.width,cv.height); timer++;
-    const spawnNow=burst<BURST?timer>=nextSpawn:timer>=nextSpawn&&stars.length<2;
-    if(spawnNow){stars.push(new CStar());timer=0;if(burst<BURST){burst++;nextSpawn=28+Math.floor(Math.random()*40);if(burst>=BURST)nextSpawn=rSpawn();}else nextSpawn=rSpawn();}
+    const spawnNow=burst<BURST?timer>=nextSpawn:timer>=nextSpawn&&stars.length<5;
+    if(spawnNow){stars.push(new CStar());timer=0;if(burst<BURST){burst++;nextSpawn=6+Math.floor(Math.random()*14);if(burst>=BURST)nextSpawn=rSpawn();}else nextSpawn=rSpawn();}
     stars=stars.filter(s=>s.alive);
     stars.forEach(s=>{s.update();s.draw();});
     requestAnimationFrame(anim);
   }
   anim();
 }
-let _welcomeStarActive = false;
+let _welcomeStarActive = false, _welcomeBurstReset = null;
 function showWelcome() {
   const el = document.getElementById('welcome-overlay');
   el.style.display = 'flex';
   if (!_welcomeStarActive) { _welcomeStarActive = true; _initWelcomeStars(); }
+  else if (_welcomeBurstReset) { _welcomeBurstReset(); }
 }
 function hideWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
 function _initWelcomeStars() {
@@ -920,9 +926,9 @@ function _initWelcomeStars() {
   const cx = cv.getContext('2d');
   function resize() { cv.width = window.innerWidth; cv.height = window.innerHeight; }
   resize(); window.addEventListener('resize', resize);
-  let stars = [], timer = 0, nextSpawn = 8, burst = 0;
-  const BURST = 4;
-  function rSpawn() { return 420 + Math.floor(Math.random() * 480); }
+  let stars = [], timer = 0, nextSpawn = 4, burst = 0;
+  const BURST = 14;
+  function rSpawn() { return 140 + Math.floor(Math.random() * 180); }
   class WStar {
     constructor() {
       this.x=Math.random()*cv.width*0.75; this.y=Math.random()*cv.height*0.35;
@@ -961,10 +967,14 @@ function _initWelcomeStars() {
       cx.beginPath();cx.arc(this.x,this.y,4+burn*3,0,Math.PI*2);cx.fillStyle=g;cx.fill();
     }
   }
+  _welcomeBurstReset = function() {
+    burst = 0; timer = 0; nextSpawn = 4;
+    for(let i=0;i<4;i++) stars.push(new WStar());
+  };
   function anim() {
     cx.clearRect(0,0,cv.width,cv.height); timer++;
-    const spawnNow=burst<BURST?timer>=nextSpawn:timer>=nextSpawn&&stars.length<2;
-    if(spawnNow){stars.push(new WStar());timer=0;if(burst<BURST){burst++;nextSpawn=28+Math.floor(Math.random()*40);if(burst>=BURST)nextSpawn=rSpawn();}else nextSpawn=rSpawn();}
+    const spawnNow=burst<BURST?timer>=nextSpawn:timer>=nextSpawn&&stars.length<5;
+    if(spawnNow){stars.push(new WStar());timer=0;if(burst<BURST){burst++;nextSpawn=6+Math.floor(Math.random()*14);if(burst>=BURST)nextSpawn=rSpawn();}else nextSpawn=rSpawn();}
     stars=stars.filter(s=>s.alive);
     stars.forEach(s=>{s.update();s.draw();});
     requestAnimationFrame(anim);
