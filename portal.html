@@ -779,7 +779,10 @@ select.field-input { cursor: pointer; }
 <div id="zpk-full-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center; font-family:'Inter',sans-serif;" onclick="hideZPKTooltip()">
     <div style="background:#fff; color:#111827; border-radius:16px; padding:52px 56px; max-width:800px; width:92%; box-shadow:0 32px 80px rgba(0,0,0,0.4); text-align:left; position:relative;" onclick="event.stopPropagation()">
         <button onclick="hideZPKTooltip()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:18pt;cursor:pointer;color:#9ca3af;">&times;</button>
-        <div style="font-weight:800; margin-bottom:18px; font-size:31pt; letter-spacing:-0.02em; color:#111827;">What if hard drives were not part of the equation?</div>
+        <div style="font-weight:800; margin-bottom:18px; font-size:31pt; letter-spacing:-0.02em; color:#111827; line-height:1.1;">
+            RAM only processing<br>
+            <span style="font-size:18pt; font-weight:600; color:#4b5563; letter-spacing:0;">Zero Cookies, Local or Session Storage</span>
+        </div>
         <div style="color:#4b5563; font-size:16pt; line-height:1.75; margin-bottom:28px;">In a ZPK&trade; Stateless Terminal deployment, there would be no local storage. The ISO message would live only in RAM during processing. The moment the transaction is confirmed by the Hook, it is gone.</div>
         <div style="font-size:15pt; font-weight:700; color:#111827; margin-bottom:14px;">What that would mean in practice:</div>
         <ul style="list-style:none; margin-bottom:28px;">
